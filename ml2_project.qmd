@@ -1,0 +1,97 @@
+---
+title: "ML2 project"
+editor: visual
+---
+
+## Load libraries
+
+```{r message=FALSE}
+library(dlookr)
+library(corrplot)
+library("PerformanceAnalytics")
+library(splitTools)
+library(ranger)
+library(tidyverse)
+library(caret)
+```
+
+## Load data
+
+```{r}
+df.insurance <- read.csv(file ='./datasets/insurance.csv', header = TRUE)
+describe(df.insurance)
+```
+
+## Reorganize data
+
+```{r}
+num.cols <- unlist(lapply(data, is.numeric))
+num.cols <- c('age', 'bmi', 'children', 'charges')
+cat.cols <- c('sex', 'smoker', 'region')
+df.insurance <- df.insurance %>%
+  mutate(sex = factor(sex, levels = unique(df.insurance$sex))) %>%
+  mutate(smoker = factor(smoker, levels = unique(df.insurance$smoker))) %>%
+  mutate(region = factor(region, levels = unique(df.insurance$region)))
+```
+
+## Plots correlation netween numerical features
+
+```{r}
+chart.Correlation(df.insurance[num.cols], histogram = TRUE, pch = 19)
+```
+
+## Plots correlation netween numerical features
+
+```{r}
+ggplot(df.insurance, aes(x = age, y = charges, fill = smoker, size = bmi, alpha = .3)) +
+  geom_point(pch = 21) +
+  scale_size_continuous(range = c(0, 10))
+
+#eda_report(df.insurance, charges, output_format = "html", output_file = "EDA_insurance.html")
+
+```
+
+## Split dataset into 60% train set, 20% validation and 20% test set
+
+```{r}
+
+set.seed(1)
+inds <- partition(df.insurance$charges, p = c(train = 0.6, valid = 0.2, test = 0.2))
+str(inds)
+
+#$ train: int [1:804] 2 3 7 8 9 11 12 15 16 18 ...
+#$ valid: int [1:266] 5 17 19 31 36 41 46 47 49 51 ...
+#$ test : int [1:268] 1 4 6 10 13 14 20 22 24 26 ...
+
+train <- df.insurance[inds$train, ]
+valid <- df.insurance[inds$valid, ]
+test <- df.insurance[inds$test, ]
+
+```
+
+## Create simple linear model with 'charges' as outcome variable and inclusing all other columns as predictor variables.
+
+```{r}
+
+lm1 <- lm(charges ~ ., train)
+summary(lm1)
+
+```
+
+## Predict the outcome of the validation set and calculate RMSE and R2 scores.
+
+```{r}
+lm1.pred <- predict(lm1, valid, se.fit = TRUE)
+RMSE(lm1.pred$fit, valid$charges) # [1] 5914.46
+R2(lm1.pred$fit, valid$charges) # [1] 0.7619868
+```
+
+## Predict the outcome of the test set and calculate RMSE and R2 scores.
+
+```{r}
+lm1.pred <- predict(lm1, test, se.fit = TRUE)
+RMSE(lm1.pred$fit, test$charges)
+# [1] 5670.218
+R2(lm1.pred$fit, test$charges)
+# 0.773166
+```
