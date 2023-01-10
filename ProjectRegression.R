@@ -2,7 +2,7 @@ library(caret)
 library(rpart)
 library(rpart.plot)
 
-data <- read.csv("/Users/conor/Downloads/insurance.csv")
+data <- read.csv("git/BHT_ML2/data/insurance.csv")
 
 names(data)
 
