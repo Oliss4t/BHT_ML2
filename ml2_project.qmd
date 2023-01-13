@@ -13,6 +13,8 @@ library(splitTools)
 library(ranger)
 library(tidyverse)
 library(caret)
+library(rpart)
+library(rpart.plot)
 ```
 
 ## Load data
@@ -95,3 +97,86 @@ RMSE(lm1.pred$fit, test$charges)
 R2(lm1.pred$fit, test$charges)
 # 0.773166
 ```
+
+## Create a Regression Tree and compare it to the baseline model
+
+```{r, echo=FALSE}
+tree.data<-rpart(charges~.,train)
+print(tree.data)
+```
+
+Here we will follow the tactic of creating a full tree (i.e. totally overfitted) which will then be pruned back. We can see in the below plot how the error decreases as the complexity parameter decreases. Based on this plot a suitable complexity parameter is selected, and this quite interpretable decision tree is shown. 
+
+```{r, echo=FALSE}
+
+tree.data.full<-rpart(charges~.,train,cp=0)
+
+cpmatrix<-printcp(tree.data.full)
+plotcp(tree.data.full)
+
+prune.data=prune(tree.data,cp=0.019)
+rpart.plot(prune.data)
+```
+
+Let us predict and get some metrics as was done for the baseline model. Do this for the validation set. This is initially done on the full, overfitted tree, then on the default one, and then on the one with the selected complexity parameter
+```{r}
+pred.train.full <- predict(tree.data.full, valid, se.fit = TRUE)
+RMSE(pred.train.full, valid$charges) 
+R2(pred.train.full, valid$charges) 
+```
+and the test set
+```{r}
+pred.train.full <- predict(tree.data.full, test, se.fit = TRUE)
+RMSE(pred.train.full, test$charges) 
+R2(pred.train.full, test$charges) 
+```
+
+Repeat for the other two models
+Default:
+```{r}
+pred.train.default <- predict(tree.data, valid, se.fit = TRUE)
+RMSE(pred.train.default, valid$charges) 
+R2(pred.train.default, valid$charges) 
+```
+```{r}
+pred.train.default <- predict(tree.data, test, se.fit = TRUE)
+RMSE(pred.train.default, test$charges) 
+R2(pred.train.default, test$charges) 
+```
+
+Pruned:
+```{r}
+pred.train.pruned <- predict(prune.data, valid, se.fit = TRUE)
+RMSE(pred.train.pruned, valid$charges) 
+R2(pred.train.pruned, valid$charges) 
+```
+```{r}
+pred.train.pruned <- predict(prune.data, test, se.fit = TRUE)
+RMSE(pred.train.pruned, test$charges) 
+R2(pred.train.pruned, test$charges) 
+```
+
+## Hyperparamter optimisation
+
+Finding the optimal complexity parameter via grid search:
+
+```{r}
+param_grid <- expand.grid(cp = seq(0.01, 0.5, 0.01))
+
+regtree <- train(
+  charges ~ .,
+  data = train,
+  method = "rpart",
+  trControl = trainControl(method = "cv", number = 10),
+  tuneGrid = param_grid
+)
+
+print(regtree$bestTune)
+
+predictions <- predict(regtree, newdata = test)
+
+RMSE(predictions, test$charges) 
+R2(predictions, test$charges) 
+```
+
+
