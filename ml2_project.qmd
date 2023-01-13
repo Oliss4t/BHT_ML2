@@ -1,11 +1,21 @@
 ---
-title: "ML2 project"
-editor: visual
+title: "Machine Learning 2: Prediction the Individual Medical Cost"
+author: "Conor Fallon; Dennis Fast; Leonhard Liu; Tassilo Henninger"
+date: "17 1 2023"
+format:
+  pdf:
+    toc: true
+    number-sections: true
+    colorlinks: true
+    output-file: "ML2_report"
+    output-ext:  "pdf"
+editor_options: 
+  markdown: 
+    wrap: sentence
 ---
 
+```{r message=FALSE, warning=FALSE, include=FALSE}
 ## Load libraries
-
-```{r message=FALSE}
 library(dlookr)
 library(corrplot)
 library("PerformanceAnalytics")
@@ -17,14 +27,42 @@ library(rpart)
 library(rpart.plot)
 ```
 
+# Project Goal and Outline
+
+<font style='color: #000000; background-color: #FF0000'>**write introduction why we are interested in this topic ;) and outline the project including the following points**</font>
+
+* a detailed description of the problem: regression problem
+* an introduction to the solution method(s)
+    * what methods did we use...Baseline, Trees, Neural Networks
+* our outline
+    * split the data into train ,validation and test
+    * use the train data and validation data for the first round, leaving the test data purelz for the final model comparison between the best Neural Net and the best Regression Tree. As such, the selection for the best model in our two algorithm classes is based on the validation error. Then when ultimately comparing the two chosen models, these are retrained on the combined train and validation splits, and finally tested on the test set, which has been withheld for this purpose.
+* Discussion and futur work (Still to do or just leave to end of document)
+
+
+```{r,, include=FALSE , include=FALSE}
 ## Load data
 
-```{r}
 df.insurance <- read.csv(file ='./datasets/insurance.csv', header = TRUE)
 describe(df.insurance)
 ```
 
-## Reorganize data
+# Dateset and Preprocessing
+
+-   a short description of your data
+
+Dataset:
+
+-   https://github.com/stedy/Machine-Learning-with-R-datasets
+-   https://www.kaggle.com/datasets/mirichoi0218/insurance
+
+The dataset is included in a Book called "Machine Learning with R" by Brett Lantz and is also available on Kaggle.
+The dataset contains 1338 rows, 7 columns and there are no missing values.
+The 6 predictor variables are: age(numeric,integer), sex(female/male), bmi(numeric,float), children(numeric,integer), smoker(boolean) and region(categorical).
+The outcome variable is "charges" (numeric,float).
+Thereby it is a regression problem and the goal is to accurately predict the insurance costs.
+
+<font style='color: #000000; background-color: #FF0000'>**check for missing values**</font>
 
 ```{r}
 num.cols <- unlist(lapply(data, is.numeric))
@@ -36,24 +74,7 @@ df.insurance <- df.insurance %>%
   mutate(region = factor(region, levels = unique(df.insurance$region)))
 ```
 
-## Plots correlation netween numerical features
-
-```{r}
-chart.Correlation(df.insurance[num.cols], histogram = TRUE, pch = 19)
-```
-
-## Plots correlation netween numerical features
-
-```{r}
-ggplot(df.insurance, aes(x = age, y = charges, fill = smoker, size = bmi, alpha = .3)) +
-  geom_point(pch = 21) +
-  scale_size_continuous(range = c(0, 10))
-
-#eda_report(df.insurance, charges, output_format = "html", output_file = "EDA_insurance.html")
-
-```
-
-## Split dataset into 60% train set, 20% validation and 20% test set
+-   Split dataset into 60% train set, 20% validation and 20% test set
 
 ```{r}
 
@@ -71,7 +92,50 @@ test <- df.insurance[inds$test, ]
 
 ```
 
-## Create simple linear model with 'charges' as outcome variable and inclusing all other columns as predictor variables.
+# EDA
+
+One of the objectives of preliminary data analysis to get a feel for the data you are dealing with by describing the key features of the data and summarizing the results.
+
+-   Plots correlation netween numerical features
+
+
+On the correlation matrix plot we see, that Charges has the strongest correlation with Age (0.3) and Children only 0.068.
+For the correlations between the explanatory variables the following stand out:
+
+<font style='color: #000000; background-color: #FF0000'>**include sex, smoker and region as well.**</font> 
+
+-   0.938: Economy and Internet
+...
+
+
+```{r}
+chart.Correlation(df.insurance[num.cols], histogram = TRUE, pch = 19)
+```
+
+-   Plots correlation netween numerical features
+
+```{r}
+ggplot(df.insurance, aes(x = age, y = charges, fill = smoker, size = bmi, alpha = .3)) +
+  geom_point(pch = 21) +
+  scale_size_continuous(range = c(0, 10))
+
+#eda_report(df.insurance, charges, output_format = "html", output_file = "EDA_insurance.html")
+
+```
+
+# Forecasting
+
+## Baseline - Linear Regression
+
+Create simple linear model with 'charges' as outcome variable and inclusing all other columns as predictor variables.
+
+### Mathematical Overview
+
+-   explanation what the model does, including mathematical notation
+
+### Hyperparameter Optimization
+
+-   a description of your fitting process including, a summary of how you arrived at your final model, the choice of hyperparameters and how you made this choice,
 
 ```{r}
 
@@ -80,7 +144,7 @@ summary(lm1)
 
 ```
 
-## Predict the outcome of the validation set and calculate RMSE and R2 scores.
+-   Predict the outcome of the validation set and calculate RMSE and R2 scores.
 
 ```{r}
 lm1.pred <- predict(lm1, valid, se.fit = TRUE)
@@ -88,7 +152,11 @@ RMSE(lm1.pred$fit, valid$charges) # [1] 5914.46
 R2(lm1.pred$fit, valid$charges) # [1] 0.7619868
 ```
 
-## Predict the outcome of the test set and calculate RMSE and R2 scores.
+### Performance
+
+-   an appropriate assessment of the predicted values and
+
+-   Predict the outcome of the test set and calculate RMSE and R2 scores.
 
 ```{r}
 lm1.pred <- predict(lm1, test, se.fit = TRUE)
@@ -98,14 +166,28 @@ R2(lm1.pred$fit, test$charges)
 # 0.773166
 ```
 
-## Create a Regression Tree and compare it to the baseline model
 
+## Algorithm 1 - Tree Models
+
+### Mathematical Overview
+
+-   explanation what the model does, including mathematical notation
+
+### Hyperparameter Optimization
+
+-   a description of your fitting process including, a summary of how you arrived at your final model, the choice of hyperparameters and how you made this choice,
+
+* regression tree out of the box: standard hyperparameter settings, baseline of the regression trees
 ```{r, echo=FALSE}
 tree.data<-rpart(charges~.,train)
 print(tree.data)
 ```
 
 Here we will follow the tactic of creating a full tree (i.e. totally overfitted) which will then be pruned back. We can see in the below plot how the error decreases as the complexity parameter decreases. Based on this plot a suitable complexity parameter is selected, and this quite interpretable decision tree is shown. 
+
+<font style='color: #000000; background-color: #FF0000'>**Find rule of thumb in the lecture slides to find the cutoff for the complexity parameter**</font>
+
+* completly overfitte regression tree
 
 ```{r, echo=FALSE}
 
@@ -121,19 +203,25 @@ rpart.plot(prune.data)
 Let us predict and get some metrics as was done for the baseline model. Do this for the validation set. This is initially done on the full, overfitted tree, then on the default one, and then on the one with the selected complexity parameter
 ```{r}
 pred.train.full <- predict(tree.data.full, valid, se.fit = TRUE)
+
+#Validation data
 RMSE(pred.train.full, valid$charges) 
 R2(pred.train.full, valid$charges) 
-```
-and the test set
-```{r}
+
+
+#exclude that part!
+#Test data
 pred.train.full <- predict(tree.data.full, test, se.fit = TRUE)
 RMSE(pred.train.full, test$charges) 
 R2(pred.train.full, test$charges) 
 ```
 
+
+
 Repeat for the other two models
 Default:
 ```{r}
+# out of the box tree model
 pred.train.default <- predict(tree.data, valid, se.fit = TRUE)
 RMSE(pred.train.default, valid$charges) 
 R2(pred.train.default, valid$charges) 
@@ -146,6 +234,7 @@ R2(pred.train.default, test$charges)
 
 Pruned:
 ```{r}
+# Chosen complexity parameter based on the theory and graph
 pred.train.pruned <- predict(prune.data, valid, se.fit = TRUE)
 RMSE(pred.train.pruned, valid$charges) 
 R2(pred.train.pruned, valid$charges) 
@@ -156,7 +245,8 @@ RMSE(pred.train.pruned, test$charges)
 R2(pred.train.pruned, test$charges) 
 ```
 
-## Hyperparamter optimisation
+<font style='color: #000000; background-color: #FF0000'>**Do the Gridsearch for the splitting criteria as well, gini index vs. entropy**</font>
+
 
 Finding the optimal complexity parameter via grid search:
 
@@ -179,4 +269,28 @@ RMSE(predictions, test$charges)
 R2(predictions, test$charges) 
 ```
 
+### Performance
+
+-   an appropriate assessment of the predicted values and
+<font style='color: #000000; background-color: #FF0000'>**Include variable importance. For a singel tree you can interpret a fitted model by inspecting the text output of the tree or the tree diagram itself. We could also calculate the Increase in Node Purity and Mean decrease in Accuracy, but that is most often done for ensembled methods, as you e.g can not plot all trees of a random forest.**</font>
+
+## Algorithm 2 - Neural Networks
+
+### Mathematical Overview
+
+-   explanation what the model does, including mathematical notation
+
+### Hyperparameter Optimization
+
+-   a description of your fitting process including, a summary of how you arrived at your final model, the choice of hyperparameters and how you made this choice,
+
+### Performance
+
+-   an appropriate assessment of the predicted values and
+
+## Model Comparrison
+
+-   fair comparison of the two methods using the test data
+
+# Future Work and Discussion
 
