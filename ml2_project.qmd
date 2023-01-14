@@ -193,21 +193,60 @@ R2(lm1.pred$fit, test$charges)
 
 -   explanation what the model does, including mathematical notation
 
+A regression tree is a specific class of tree which will predict a numerical dependent variable based on a number of explanatory variables.
+They can deal with the situation in which the explanatory variables interact with one another (BMI and age are in all likelihood in someway dependent).
+This can be difficult to model through simpler models like linear regression; however, by partitioning the data into smaller regions, the interactions between the explanatory variables, potentially very complex, can become more manageable.
+
+In a tree model, this partitioning and sub-partitioning (i.e. recursively partitioning each partition) is done by the tree.
+
+We want a set of predictor variables $X_1, ..., X_P$, into some number $J$ distinct and mutually exclusive regions (partitions) $R_1, ..., R_J$.
+In this description, each observation that falls into the region $R_j$ will have the same value assigned to it.
+
+These regions are decided upon as follows: we want to find a selection of regions $R_1, ..., R_J$ such that the residual squared error (RSS) is minimised.
+I.e. minimise
+
+$\Sigma_{j=1}^J$ $\Sigma_{i \in R_j}$ $(y_i - \hat{y}_{R_j})^2$
+
+where $\hat{y}_{R_j}$ is the mean value for the predictor variable in that given region based on the training data.
+
+The splitting is done in a top-down, greedy manner, where the splitting starts at the top of the tree (i.e. all data-points belong to the same region), then this split in 2, and this process is repeated for each split in the tree.
+It is greedy in the sense that it does not look ahead steps into the future; it simply predicts the best split for the split in question.
+
+The actual splitting is done as follows.
+A predictor variable $X_j$ and a splitting point $s$ such that the splitting regions $X|X_j < s$ and $X|X_j \ge s$ provides the smallest possible RSS.
+This is then repeated for the other predictor variables until the predictor variable which gave had the value of $s$ which gave the smallest RSS is found and this is chosen as the variable for this split in the tree.
+We do this until a stopping criteria is found, one which will ideally neither underfit nor overfit the tree.
+In our case, we are examining the complexity parameter in order to do this.
+
+Of course, if we completely overfit the tree, there will be the smallest RSS; however, we want to penalise overfitting in some way.
+The approach used here is penalised least squares (PLS).
+Let us call our full tree $T_0$.
+We want to find a pruned tree $T_\alpha$ $\subset$ $T_0$ such that
+
+$PLS(\alpha) = \Sigma_{j \in |T_\alpha|}^J$ $\Sigma_{i \in R_j}$$(y_i - \hat{y}_{R_j})^2 + \alpha |T_\alpha|$
+
+with $\alpha$ greater than or equal to zero, and the other variables as defined already.
+$\alpha$ is the complexity parameter.
+It can be found using $K$-fold cross validation.
+The rule of thumb that is used by the rpart package is to take the largest value of the complexity parameter that is within 1 standard deviation of the smallest value out of the cross validation setup.
 ### Hyperparameter Optimization
 
 -   a description of your fitting process including, a summary of how you arrived at your final model, the choice of hyperparameters and how you made this choice,
 
-* regression tree out of the box: standard hyperparameter settings, baseline of the regression trees
+-   regression tree out of the box: standard hyperparameter settings, baseline of the regression trees.
+    Uses 10-fold cross validation as its default to find the complexity parameter.
+
 ```{r, echo=FALSE}
 tree.data<-rpart(charges~.,train)
 print(tree.data)
 ```
 
-Here we will follow the tactic of creating a full tree (i.e. totally overfitted) which will then be pruned back. We can see in the below plot how the error decreases as the complexity parameter decreases. Based on this plot a suitable complexity parameter is selected, and this quite interpretable decision tree is shown.
+Here we will follow the tactic of creating a full tree (i.e. totally overfitted) which will then be pruned back.
+We can see in the below plot how the error decreases as the complexity parameter decreases.
+Based on this plot a suitable complexity parameter is selected, and this quite interpretable decision tree is shown.
+Note, there exist other error measures for the splitting criteria and this will be discussed further on.
 
-<font style='color: #000000; background-color: #FF0000'>**Find rule of thumb in the lecture slides to find the cutoff for the complexity parameter**</font>
-
-* completly overfitte regression tree
+-   completly overfitte regression tree
 
 ```{r, echo=FALSE}
 
@@ -220,53 +259,56 @@ prune.data=prune(tree.data,cp=0.019)
 rpart.plot(prune.data)
 ```
 
-Let us predict and get some metrics as was done for the baseline model. Do this for the validation set. This is initially done on the full, overfitted tree, then on the default one, and then on the one with the selected complexity parameter
+Let us predict and get some metrics as was done for the baseline model.
+Do this for the validation set.
+This is initially done on the full, overfitted tree, then on the default one, and then on the one with the selected complexity parameter
+
 ```{r}
 pred.train.full <- predict(tree.data.full, valid, se.fit = TRUE)
 
 #Validation data
-RMSE(pred.train.full, valid$charges)
-R2(pred.train.full, valid$charges)
+RMSE(pred.train.full, valid$charges) 
+R2(pred.train.full, valid$charges) 
 
 
 #exclude that part!
 #Test data
 pred.train.full <- predict(tree.data.full, test, se.fit = TRUE)
-RMSE(pred.train.full, test$charges)
-R2(pred.train.full, test$charges)
+RMSE(pred.train.full, test$charges) 
+R2(pred.train.full, test$charges) 
 ```
 
+Repeat for the other two models Default:
 
-
-Repeat for the other two models
-Default:
 ```{r}
 # out of the box tree model
 pred.train.default <- predict(tree.data, valid, se.fit = TRUE)
-RMSE(pred.train.default, valid$charges)
-R2(pred.train.default, valid$charges)
+RMSE(pred.train.default, valid$charges) 
+R2(pred.train.default, valid$charges) 
 ```
+
 ```{r}
 pred.train.default <- predict(tree.data, test, se.fit = TRUE)
-RMSE(pred.train.default, test$charges)
-R2(pred.train.default, test$charges)
+RMSE(pred.train.default, test$charges) 
+R2(pred.train.default, test$charges) 
 ```
 
 Pruned:
+
 ```{r}
 # Chosen complexity parameter based on the theory and graph
 pred.train.pruned <- predict(prune.data, valid, se.fit = TRUE)
-RMSE(pred.train.pruned, valid$charges)
-R2(pred.train.pruned, valid$charges)
+RMSE(pred.train.pruned, valid$charges) 
+R2(pred.train.pruned, valid$charges) 
 ```
+
 ```{r}
 pred.train.pruned <- predict(prune.data, test, se.fit = TRUE)
-RMSE(pred.train.pruned, test$charges)
-R2(pred.train.pruned, test$charges)
+RMSE(pred.train.pruned, test$charges) 
+R2(pred.train.pruned, test$charges) 
 ```
 
 <font style='color: #000000; background-color: #FF0000'>**Do the Gridsearch for the splitting criteria as well, gini index vs. entropy**</font>
-
 
 Finding the optimal complexity parameter via grid search:
 
@@ -283,16 +325,24 @@ regtree <- train(
 
 print(regtree$bestTune)
 
-predictions <- predict(regtree, newdata = test)
+predictions <- predict(regtree, newdata = valid)
 
-RMSE(predictions, test$charges)
-R2(predictions, test$charges)
+RMSE(predictions, valid$charges) 
+R2(predictions, valid$charges) 
 ```
 
 ### Performance
 
--   an appropriate assessment of the predicted values and
-<font style='color: #000000; background-color: #FF0000'>**Include variable importance. For a singel tree you can interpret a fitted model by inspecting the text output of the tree or the tree diagram itself. We could also calculate the Increase in Node Purity and Mean decrease in Accuracy, but that is most often done for ensembled methods, as you e.g can not plot all trees of a random forest.**</font>
+-   an appropriate assessment of the predicted values and <font style='color: #000000; background-color: #FF0000'>**Include variable importance. For a singel tree you can interpret a fitted model by inspecting the text output of the tree or the tree diagram itself. We could also calculate the Increase in Node Purity and Mean decrease in Accuracy, but that is most often done for ensembled methods, as you e.g can not plot all trees of a random forest.**</font>
+
+The best result was for the final tree found via hyperparameter optimisation which gave an RMSE of \[1\] 4759.202 and an R2 of \[1\] 0.8432418 on the validation data.
+It looks as follows
+
+```{r}
+printcp(rpart(charges~.,train,cp=0.01))
+plotcp(rpart(charges~.,train,cp=0.01))
+rpart.plot(rpart(charges~.,train,cp=0.01))
+```
 
 ## Algorithm 2 - Neural Networks
 
