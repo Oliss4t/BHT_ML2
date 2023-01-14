@@ -1,1 +1,0 @@
-train_loss:17236722.0 val_loss:19346894 test_loss:23831296.0 
