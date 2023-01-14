@@ -29,15 +29,27 @@ library(rpart.plot)
 
 # Project Goal and Outline
 
-<font style='color: #000000; background-color: #FF0000'>**write introduction why we are interested in this topic ;) and outline the project including the following points**</font>
+<font style='color: #000000; background-color: #FF0000'>**Can add more as needed when all is done, is finished for now**</font>
 
-* a detailed description of the problem: regression problem
-* an introduction to the solution method(s)
-    * what methods did we use...Baseline, Trees, Neural Networks
-* our outline
-    * split the data into train ,validation and test
-    * use the train data and validation data for the first round, leaving the test data purelz for the final model comparison between the best Neural Net and the best Regression Tree. As such, the selection for the best model in our two algorithm classes is based on the validation error. Then when ultimately comparing the two chosen models, these are retrained on the combined train and validation splits, and finally tested on the test set, which has been withheld for this purpose.
-* Discussion and futur work (Still to do or just leave to end of document)
+The task at hand is a regression problem. Broadly speaking, we wish to create a series of models, each of which will be able to make predictions on a withheld test test. The dataset in question is a Medical Cost dataset. The variable we wish to predict is the expected insurance premium for a given individual based on the following input variables:
+
+* age
+* sex: male or female
+* Body mass index, is a measure of one's weight relative to their height
+* children: Number of children/dependants also covered under this person's health insurance
+* smoker: Whether the person smokes or not
+* region: For locations: northeast, southeast, southwest, northwest. All refer to the United States
+* charges: The premium billed by the health insurance company. This is the predictor variable
+
+Of course, some of these variables seem obvious in how they affect a person's insurance premium; a 98 year-old obese smoker will have a higher insurance premium than a 24 year-old non-smoker with a healthy BMI. However, through some exploratory data analysis as well as by comparing our methods, a more discerning picture of how each variable impacts the value we wish to predict will be discussed.
+
+There will be three models compared to each other: a baseline model, which consists of a simple linear regression; a regression tree; and a neural network. The best model is ultimately decided upon by using the Root Mean Squared error, although other metrics, where suitable, will be used to influence our decision making. 
+
+For both the Neural Network and the Regression Tree models, we wish to find a 'best' Neural Network and a 'best' Regression Tree with which to work. For this purpose, these models are initially trained only on the train split (as outlined further on), and the 'best' model for each is decided upon based on their performance on a validation split. As such, the selection for the best model in our two algorithm classes is based on the validation error.
+
+It is important to emphasise that this leaves the test data untouched at the stage when these models are created, leaving the test data purely for the final model comparison between the best Neural Net and the best Regression Tree. Then when ultimately comparing the two chosen models, these are retrained on the combined train and validation splits, and finally tested on the test set, which has been withheld for this purpose.
+
+This report will conclude with a discussion of our findings, an examination of what worked and what did not work, and will also mention avenues for future work.
 
 
 ```{r,, include=FALSE , include=FALSE}
@@ -293,4 +305,3 @@ R2(predictions, test$charges)
 -   fair comparison of the two methods using the test data
 
 # Future Work and Discussion
-
