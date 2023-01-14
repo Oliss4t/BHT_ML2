@@ -55,7 +55,7 @@ This report will conclude with a discussion of our findings, an examination of w
 ```{r,, include=FALSE , include=FALSE}
 ## Load data
 
-df.insurance <- read.csv(file ='./datasets/insurance.csv', header = TRUE)
+df.insurance <- read.csv(file ='./data/insurance.csv', header = TRUE)
 describe(df.insurance)
 ```
 
@@ -86,7 +86,7 @@ df.insurance <- df.insurance %>%
   mutate(region = factor(region, levels = unique(df.insurance$region)))
 ```
 
--   Split dataset into 60% train set, 20% validation and 20% test set
+-   Split dataset into 60% train set, 20% validation and 20% test set and save the data for later use in Python.
 
 ```{r}
 
@@ -102,6 +102,14 @@ train <- df.insurance[inds$train, ]
 valid <- df.insurance[inds$valid, ]
 test <- df.insurance[inds$test, ]
 
+# write.csv(train, './data/train.csv', row.names=TRUE)
+# write.csv(valid, './data/val.csv', row.names=TRUE)
+# write.csv(test, './data/test.csv', row.names=TRUE)
+
+train <- read.csv(file ='./data/train.csv', header = TRUE)
+valid <- read.csv(file ='./data/valid.csv', header = TRUE)
+test <- read.csv(file ='./data/test.csv', header = TRUE)
+
 ```
 
 # EDA
@@ -114,7 +122,7 @@ One of the objectives of preliminary data analysis to get a feel for the data yo
 On the correlation matrix plot we see, that Charges has the strongest correlation with Age (0.3) and Children only 0.068.
 For the correlations between the explanatory variables the following stand out:
 
-<font style='color: #000000; background-color: #FF0000'>**include sex, smoker and region as well.**</font> 
+<font style='color: #000000; background-color: #FF0000'>**include sex, smoker and region as well.**</font>
 
 -   0.938: Economy and Internet
 ...
@@ -195,7 +203,7 @@ tree.data<-rpart(charges~.,train)
 print(tree.data)
 ```
 
-Here we will follow the tactic of creating a full tree (i.e. totally overfitted) which will then be pruned back. We can see in the below plot how the error decreases as the complexity parameter decreases. Based on this plot a suitable complexity parameter is selected, and this quite interpretable decision tree is shown. 
+Here we will follow the tactic of creating a full tree (i.e. totally overfitted) which will then be pruned back. We can see in the below plot how the error decreases as the complexity parameter decreases. Based on this plot a suitable complexity parameter is selected, and this quite interpretable decision tree is shown.
 
 <font style='color: #000000; background-color: #FF0000'>**Find rule of thumb in the lecture slides to find the cutoff for the complexity parameter**</font>
 
@@ -217,15 +225,15 @@ Let us predict and get some metrics as was done for the baseline model. Do this 
 pred.train.full <- predict(tree.data.full, valid, se.fit = TRUE)
 
 #Validation data
-RMSE(pred.train.full, valid$charges) 
-R2(pred.train.full, valid$charges) 
+RMSE(pred.train.full, valid$charges)
+R2(pred.train.full, valid$charges)
 
 
 #exclude that part!
 #Test data
 pred.train.full <- predict(tree.data.full, test, se.fit = TRUE)
-RMSE(pred.train.full, test$charges) 
-R2(pred.train.full, test$charges) 
+RMSE(pred.train.full, test$charges)
+R2(pred.train.full, test$charges)
 ```
 
 
@@ -235,26 +243,26 @@ Default:
 ```{r}
 # out of the box tree model
 pred.train.default <- predict(tree.data, valid, se.fit = TRUE)
-RMSE(pred.train.default, valid$charges) 
-R2(pred.train.default, valid$charges) 
+RMSE(pred.train.default, valid$charges)
+R2(pred.train.default, valid$charges)
 ```
 ```{r}
 pred.train.default <- predict(tree.data, test, se.fit = TRUE)
-RMSE(pred.train.default, test$charges) 
-R2(pred.train.default, test$charges) 
+RMSE(pred.train.default, test$charges)
+R2(pred.train.default, test$charges)
 ```
 
 Pruned:
 ```{r}
 # Chosen complexity parameter based on the theory and graph
 pred.train.pruned <- predict(prune.data, valid, se.fit = TRUE)
-RMSE(pred.train.pruned, valid$charges) 
-R2(pred.train.pruned, valid$charges) 
+RMSE(pred.train.pruned, valid$charges)
+R2(pred.train.pruned, valid$charges)
 ```
 ```{r}
 pred.train.pruned <- predict(prune.data, test, se.fit = TRUE)
-RMSE(pred.train.pruned, test$charges) 
-R2(pred.train.pruned, test$charges) 
+RMSE(pred.train.pruned, test$charges)
+R2(pred.train.pruned, test$charges)
 ```
 
 <font style='color: #000000; background-color: #FF0000'>**Do the Gridsearch for the splitting criteria as well, gini index vs. entropy**</font>
@@ -277,8 +285,8 @@ print(regtree$bestTune)
 
 predictions <- predict(regtree, newdata = test)
 
-RMSE(predictions, test$charges) 
-R2(predictions, test$charges) 
+RMSE(predictions, test$charges)
+R2(predictions, test$charges)
 ```
 
 ### Performance
