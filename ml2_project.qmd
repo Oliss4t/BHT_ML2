@@ -155,13 +155,16 @@ In order to check the performance of the chosen models, we first created simple 
 
 ### Mathematical Overview
 
-The mathematical notation of a linear model represents a linear relationship between the outcome variable 'charges' and the predictor variables 'age', 'sex', 'BMI', 'children', 'smoker', and 'region'. The equation states that the outcome variable 'charges' is a linear combination of the predictor variables, with each predictor variable multiplied by a specific coefficient (beta):
+The mathematical notation of a linear model represents a linear relationship between the outcome variable 'charges' and the predictor variables 'age', 'sex', 'BMI', 'children', 'smoker', and 'region'.
+The equation states that the outcome variable 'charges' is a linear combination of the predictor variables, with each predictor variable multiplied by a specific coefficient (beta):
 
 $charges = \beta_{0} + \beta_{1}*age + \beta_{2}*sex + \beta_{3}*BMI + \beta_{4}*children + \beta_{5}*smoker + \beta_{6}*region$
 
 In this equation, 'charges' is represented as charges, the coefficients are represented as $\beta_{0}$, $\beta_{1}$, $\beta_{2}$, $\beta_{3}$, $\beta_{4}$, $\beta_{5}$, $\beta_{6}$ and predictor variables 'age', 'sex', 'BMI', 'children', 'smoker', and 'region' are represented as age, sex, BMI, children, smoker, region respectively.
 
-The equation can be used to make predictions about the outcome variable 'charges' based on the values of the predictor variables. For example, if we know the values of 'age', 'sex', 'BMI', 'children', 'smoker', and 'region' for a specific individual, we can plug those values into the equation and solve for 'charges'. The result of this calculation would be an estimate of the individual's 'charges'.
+The equation can be used to make predictions about the outcome variable 'charges' based on the values of the predictor variables.
+For example, if we know the values of 'age', 'sex', 'BMI', 'children', 'smoker', and 'region' for a specific individual, we can plug those values into the equation and solve for 'charges'.
+The result of this calculation would be an estimate of the individual's 'charges'.
 
 ### Hyperparameter Optimization
 
@@ -228,15 +231,15 @@ The rule of thumb that is used by the rpart package is to take the largest value
 
 -   a description of your fitting process including, a summary of how you arrived at your final model, the choice of hyperparameters and how you made this choice,
 
--   regression tree out of the box: standard hyperparameter settings, baseline of the regression trees.
-    Uses 10-fold cross validation as its default to find the complexity parameter.
+This is how the rpart regression tree works out of the box: the standard hyperparameter settings form a baseline of the regression trees.
+Rpart uses 10-fold cross validation as its default to find the complexity parameter.
 
 ```{r, echo=FALSE}
 tree.data<-rpart(charges~.,train)
 print(tree.data)
 ```
 
-Here we will follow the tactic of creating a full tree (i.e. totally overfitted) which will then be pruned back.
+The next tree to be formed will be a full tree (i.e. totally overfitted) with complexity parameter equaling 0, which will then be pruned back.
 We can see in the below plot how the error decreases as the complexity parameter decreases.
 Based on this plot a suitable complexity parameter is selected, and this quite interpretable decision tree is shown.
 Note, there exist other error measures for the splitting criteria and this will be discussed further on.
@@ -265,12 +268,6 @@ pred.train.full <- predict(tree.data.full, valid, se.fit = TRUE)
 RMSE(pred.train.full, valid$charges) 
 R2(pred.train.full, valid$charges) 
 
-
-#exclude that part!
-#Test data
-pred.train.full <- predict(tree.data.full, test, se.fit = TRUE)
-RMSE(pred.train.full, test$charges) 
-R2(pred.train.full, test$charges) 
 ```
 
 Repeat for the other two models Default:
@@ -282,12 +279,6 @@ RMSE(pred.train.default, valid$charges)
 R2(pred.train.default, valid$charges) 
 ```
 
-```{r}
-pred.train.default <- predict(tree.data, test, se.fit = TRUE)
-RMSE(pred.train.default, test$charges) 
-R2(pred.train.default, test$charges) 
-```
-
 Pruned:
 
 ```{r}
@@ -295,12 +286,6 @@ Pruned:
 pred.train.pruned <- predict(prune.data, valid, se.fit = TRUE)
 RMSE(pred.train.pruned, valid$charges) 
 R2(pred.train.pruned, valid$charges) 
-```
-
-```{r}
-pred.train.pruned <- predict(prune.data, test, se.fit = TRUE)
-RMSE(pred.train.pruned, test$charges) 
-R2(pred.train.pruned, test$charges) 
 ```
 
 <font style='color: #000000; background-color: #FF0000'>**Do the Gridsearch for the splitting criteria as well, gini index vs. entropy**</font>
@@ -343,38 +328,45 @@ rpart.plot(rpart(charges~.,train,cp=0.01))
 
 ### Mathematical Overview
 
-A neural network is a type of machine learning model that is inspired by the structure and function of the human brain. It is composed of layers of interconnected nodes, or "neurons," that process and transmit information. Neural networks are capable of handling complex and non-linear relationships between input and output variables.
+A neural network is a type of machine learning model that is inspired by the structure and function of the human brain.
+It is composed of layers of interconnected nodes, or "neurons," that process and transmit information.
+Neural networks are capable of handling complex and non-linear relationships between input and output variables.
 
-A neural network can be represented mathematically as a series of layers, with each layer performing a set of mathematical operations on the input it receives. The output of one layer serves as the input to the next layer. The first layer, called the input layer, receives the input variables, and the last layer, called the output layer, produces the output variable(s). In between the input and output layers, there are one or more hidden layers that perform computations on the input data.
+A neural network can be represented mathematically as a series of layers, with each layer performing a set of mathematical operations on the input it receives.
+The output of one layer serves as the input to the next layer.
+The first layer, called the input layer, receives the input variables, and the last layer, called the output layer, produces the output variable(s).
+In between the input and output layers, there are one or more hidden layers that perform computations on the input data.
 
-The mathematical notation for a neural network can be quite complex as it depends on the architecture of the network, the number of layers and the activation functions used. In general, a neural network can be represented mathematically as:
+The mathematical notation for a neural network can be quite complex as it depends on the architecture of the network, the number of layers and the activation functions used.
+In general, a neural network can be represented mathematically as:
 
 $y = f(W_n * f(W_{n-1} * f(...f(W_1 * x + b_1) + b_2)... + b_n) + b_{n+1})$
 
 Where:
 
-- y = output variable
-- x = input variable
-- f = activation function (such as sigmoid, ReLU, etc.)
-- W = weight matrix
-- b = bias term
+-   y = output variable
+-   x = input variable
+-   f = activation function (such as sigmoid, ReLU, etc.)
+-   W = weight matrix
+-   b = bias term
 
-This equation is showing a simplified version of a feedforward neural network with one hidden layer, the input, hidden and output layers are represented by x, f(W1x + b1), f(Wnf(W_{n-1} * f(...f(W_1 * x + b_1) + b_2)... + b_n) + b_{n+1}) respectively.
+This equation is showing a simplified version of a feedforward neural network with one hidden layer, the input, hidden and output layers are represented by x, f(W1x + b1), f(Wnf(W\_{n-1} \* f(...f(W_1 \* x + b_1) + b_2)... + b_n) + b\_{n+1}) respectively.
 
 ### Implementation
 
 #### Python libraries
+
 To train the neural network model, we use Python and the following libraries:
 
-- **pandas** and **numpy** for wrangling data
+-   **pandas** and **numpy** for wrangling data
 
-- **sklearn** for preprocessing data
+-   **sklearn** for preprocessing data
 
-- **torch** for defining the neural network model
+-   **torch** for defining the neural network model
 
-- **pytorch_lightning** for running and logging the training
+-   **pytorch_lightning** for running and logging the training
 
-- **optuna** for hyperparameter optimization
+-   **optuna** for hyperparameter optimization
 
 ```{python eval=FALSE}
 import pandas as pd
@@ -416,13 +408,14 @@ val[cols_to_scale] = scaler.transform(val[cols_to_scale])
 test[cols_to_scale] = scaler.transform(test[cols_to_scale])
 ```
 
-#### Dataset Architecture 
+#### Dataset Architecture
 
 To run the training process, we have to define custom data classes first, **trainDataset**, **valDataset**, and **testDataset** that are used to load and preprocess the data for training, validation and testing respectively.
 
-Each dataset class takes one parameter, which is a DataFrame **df** containing the data, and creates two attributes, **X** and **y** from the dataframe. **X** is a tensor containing the input features 'age', 'sex', 'bmi', 'children', 'smoker', 'region' and **y** is a tensor containing the target variable 'charges'.
+Each dataset class takes one parameter, which is a DataFrame **df** containing the data, and creates two attributes, **X** and **y** from the dataframe.
+**X** is a tensor containing the input features 'age', 'sex', 'bmi', 'children', 'smoker', 'region' and **y** is a tensor containing the target variable 'charges'.
 
-The **__len__** method returns the number of data points in the dataset, and the **__getitem__** method is used to retrieve a specific data point at a given index.
+The **len** method returns the number of data points in the dataset, and the **getitem** method is used to retrieve a specific data point at a given index.
 
 ```{python eval=FALSE}
 class trainDataset(torch.utils.data.Dataset):
@@ -461,23 +454,28 @@ class testDataset(torch.utils.data.Dataset):
 
 #### Model Architecture
 
-The following section describes the model architecture of the neural network model. The **RegressionModel** class is a subclass of PyTorch's LightningModule, which is a high-level wrapper for PyTorch's neural network module.
+The following section describes the model architecture of the neural network model.
+The **RegressionModel** class is a subclass of PyTorch's LightningModule, which is a high-level wrapper for PyTorch's neural network module.
 
 The class takes four parameters:
 
-- layers: an integer representing the number of hidden layers in the network
+-   layers: an integer representing the number of hidden layers in the network
 
-- num_neurons: an integer representing the number of neurons in each hidden layer
+-   num_neurons: an integer representing the number of neurons in each hidden layer
 
-- learning_rate: a float representing the learning rate for the optimizer
+-   learning_rate: a float representing the learning rate for the optimizer
 
-- batch_size: an integer representing the batch size to use during training
+-   batch_size: an integer representing the batch size to use during training
 
-The **__init__** method is called when the class is first instantiated and sets up the neural network architecture. It creates a series of hidden layers using the helper function hidden_layer. The input layer of the network is defined with 6 input features, and the output layer has 1 output feature. Each hidden layer is defined as a linear layer followed by a ReLU activation function.
+The **init** method is called when the class is first instantiated and sets up the neural network architecture.
+It creates a series of hidden layers using the helper function hidden_layer.
+The input layer of the network is defined with 6 input features, and the output layer has 1 output feature.
+Each hidden layer is defined as a linear layer followed by a ReLU activation function.
 
 The **forward** method defines the computation that takes place within the neural network, where input data is passed through the layers and transformed into output predictions.
 
-The **training_step**, **validation_step**, and **test_step** methods define what happens during each step of the training, validation, and test processes respectively. They calculate the mean squared error loss between the predictions and the true values, log the loss and return it for optimization.
+The **training_step**, **validation_step**, and **test_step** methods define what happens during each step of the training, validation, and test processes respectively.
+They calculate the mean squared error loss between the predictions and the true values, log the loss and return it for optimization.
 
 The **configure_optimizers** method sets the optimizer to use for training, in this case, the **Adam** optimizer with the specified learning rate.
 
@@ -549,7 +547,8 @@ class RegressionModel(pl.LightningModule):
         return torch.utils.data.DataLoader(test_dataset, batch_size=self.batch_size, num_workers=0)
 ```
 
-The mathematical notation for the neural network model defined above can be represented as a series of layers, with each layer performing a set of mathematical operations on the input it receives. The output of one layer serves as the input to the next layer.
+The mathematical notation for the neural network model defined above can be represented as a series of layers, with each layer performing a set of mathematical operations on the input it receives.
+The output of one layer serves as the input to the next layer.
 
 The mathematical notation for each hidden layer would be:
 
@@ -557,15 +556,15 @@ $h_i = f(W_i * h_{i-1} + b_i)$
 
 Where:
 
-- $h_i$ is the output of the i-th hidden layer
+-   $h_i$ is the output of the i-th hidden layer
 
-- $h_{i-1}$ is the output of the (i-1)-th hidden layer
+-   $h_{i-1}$ is the output of the (i-1)-th hidden layer
 
-- $W_i$ is the weight matrix for the i-th hidden layer
+-   $W_i$ is the weight matrix for the i-th hidden layer
 
-- $b_i$ is the bias term for the i-th hidden layer
+-   $b_i$ is the bias term for the i-th hidden layer
 
-- $f$ is the activation function (ReLU)
+-   $f$ is the activation function (ReLU)
 
 The mathematical notation for the input layer is:
 
@@ -573,13 +572,13 @@ $h_0 = W_0 * x + b_0$
 
 Where:
 
-- $h_0$ is the output of the input layer
+-   $h_0$ is the output of the input layer
 
-- $W_0$ is the weight matrix for the input layer
+-   $W_0$ is the weight matrix for the input layer
 
-- $x$ is the input data
+-   $x$ is the input data
 
-- $b_0$ is the bias term for the input layer
+-   $b_0$ is the bias term for the input layer
 
 The mathematical notation for the output layer is:
 
@@ -587,15 +586,16 @@ $y = W_{n+1} * h_n + b_{n+1}$
 
 Where:
 
-- $y$ is the output variable
+-   $y$ is the output variable
 
-- $h_n$ is the output of the last hidden layer
+-   $h_n$ is the output of the last hidden layer
 
-- $W_{n+1}$ is the weight matrix for the output layer
+-   $W_{n+1}$ is the weight matrix for the output layer
 
-- $b_{n+1}$ is the bias term for the output layer
+-   $b_{n+1}$ is the bias term for the output layer
 
-The optimizer used in the model above is the Adam optimizer. Adam is an optimization algorithm that combines the benefits of the Adaptive Gradient Algorithm (AdaGrad) and Root Mean Square Propagation (RMSProp).
+The optimizer used in the model above is the Adam optimizer.
+Adam is an optimization algorithm that combines the benefits of the Adaptive Gradient Algorithm (AdaGrad) and Root Mean Square Propagation (RMSProp).
 
 The mathematical notation for the Adam optimizer is:
 
@@ -603,44 +603,47 @@ $\theta_{t+1} = \theta_t - \frac{\alpha}{\sqrt{\hat{v}_t} + \epsilon}\hat{m}_t$
 
 Where:
 
-- $\theta$ is the set of parameters to optimize
+-   $\theta$ is the set of parameters to optimize
 
-- $\alpha$ is the learning rate
+-   $\alpha$ is the learning rate
 
-- $\hat{m}_t$ is the biased first moment estimate
+-   $\hat{m}_t$ is the biased first moment estimate
 
-- $\hat{v}_t$ is the biased second raw moment estimate
+-   $\hat{v}_t$ is the biased second raw moment estimate
 
-- $\epsilon$ is a small positive constant that is added to the denominator to prevent division by zero
+-   $\epsilon$ is a small positive constant that is added to the denominator to prevent division by zero
 
 It's worth noting that the Adam optimizer also uses the concepts of momentum and adaptive learning rate which are not reflected in the mathematical notation above.
 
 #### Training the neural network
-Next, we want to test the model with predefined parameter set. Therefore, we are using the **RegressionModel** class defined earlier to create an instance of the model, and then training the model using the **Trainer** class from the **PyTorch Lightning** library.
+
+Next, we want to test the model with predefined parameter set.
+Therefore, we are using the **RegressionModel** class defined earlier to create an instance of the model, and then training the model using the **Trainer** class from the **PyTorch Lightning** library.
 
 The **TensorBoardLogger** is used to log the training progress and the results, it is passed to the **Trainer** class and it will save the logs into predefined folder.
 
 The **RegressionModel** instance is created with the following parameters:
 
-- num_neurons: 64
+-   num_neurons: 64
 
-- layers: 3
+-   layers: 3
 
-- learning_rate: 0.001
+-   learning_rate: 0.001
 
-- batch_size: 32
+-   batch_size: 32
 
 The **Trainer** class is initialized with the following parameters:
 
-- max_epochs: 50
+-   max_epochs: 50
 
-- logger: the **TensorBoardLogger** created earlier
+-   logger: the **TensorBoardLogger** created earlier
 
-- fast_dev_run: False, that means the model will run through the full training process
+-   fast_dev_run: False, that means the model will run through the full training process
 
-- auto_lr_find: True, this will use the learning rate finder to find a good initial learning rate before training.
+-   auto_lr_find: True, this will use the learning rate finder to find a good initial learning rate before training.
 
-The fit method is called on the trainer object with the model as its argument, this will start the training process. The trainer will take care of the training loop, logging progress, and saving the model.
+The fit method is called on the trainer object with the model as its argument, this will start the training process.
+The trainer will take care of the training loop, logging progress, and saving the model.
 
 ```{python eval=FALSE}
 # testing for 64 neurons, 3 layers, learning rate of 0.001, batch size of 32
@@ -656,39 +659,35 @@ trainer.fit(model)
 
 Before the training, we can check how many weights will be used in the model:
 
-  | Name   | Type       | Params
+\| Name \| Type \| Params
 
 '--------------------------------------
 
-0 | input  | Linear     | 448
+0 \| input \| Linear \| 448
 
-1 | hidden | Sequential | 12.5 K
+1 \| hidden \| Sequential \| 12.5 K
 
-2 | output | Linear     | 65    
+2 \| output \| Linear \| 65
 
-3 | relu   | ReLU       | 0     
+3 \| relu \| ReLU \| 0
 
 '--------------------------------------
 
-13.0 K    Trainable params
+13.0 K Trainable params
 
-0         Non-trainable params
+0 Non-trainable params
 
-13.0 K    Total params
+13.0 K Total params
 
-0.052     Total estimated model params size (MB)
+0.052 Total estimated model params size (MB)
 
 As the result, we obtain the MSE of 34806204 on the train set and MSE of 35508452 on the validation set.
 
 ### Hyperparameter Optimization
 
-The HPO process on the neural network model was performed using **Optuna**  library in Python.
+The HPO process on the neural network model was performed using **Optuna** library in Python.
 
-We let Optuna optimize 4 parameters for us:
-- 'num_neurons': number of neurons in each layer, between 16 and 256
-- 'batch_size': amount of data points used at once, between 32 and 512
-- 'layers': amount of layers, between 1 and 5
-- 'learning_rate': learning rate of the Adam optimizer, between 1e-5 and 1e-1
+We let Optuna optimize 4 parameters for us: - 'num_neurons': number of neurons in each layer, between 16 and 256 - 'batch_size': amount of data points used at once, between 32 and 512 - 'layers': amount of layers, between 1 and 5 - 'learning_rate': learning rate of the Adam optimizer, between 1e-5 and 1e-1
 
 ```{python eval=FALSE}
 def optimize_model(trial):
@@ -711,10 +710,10 @@ study.optimize(optimize_model, n_trials=100)
 
 As the result of the HPO, the the following parameters were found to perform the best on the validation set:
 
-- 'num_neurons': 235
-- 'batch_size': 314
-- 'layers': 5
-- 'learning_rate': 0.0748,
+-   'num_neurons': 235
+-   'batch_size': 314
+-   'layers': 5
+-   'learning_rate': 0.0748,
 
 ### Performance
 
@@ -722,9 +721,11 @@ As the result, MSE of 18894440 on the validation loss could be achieved, which i
 
 ## Model Comparison
 
-In this chapter, we want a fair comparison of the models. Therefore, we use the test set, which none of the model have seen yet and predict outcome variable using each model's best parameters, which we determined using HPO. We compare RMSE and R2 scores for the baseline model, for the regression tree model and for the neural network model.
+In this chapter, we want a fair comparison of the models.
+Therefore, we use the test set, which none of the model have seen yet and predict outcome variable using each model's best parameters, which we determined using HPO.
+We compare RMSE and R2 scores for the baseline model, for the regression tree model and for the neural network model.
 
-- Baseline model:
+-   Baseline model:
 
 ```{r}
 pred.lm.test <- predict(lm1, test, se.fit = TRUE)
@@ -732,7 +733,7 @@ RMSE(pred.lm.test$fit, test$charges)
 R2(pred.lm.test$fit, test$charges)
 ```
 
-- Regression Tree model:
+-   Regression Tree model:
 
 ```{r}
 pred.regtree.test <- predict(regtree, newdata = test)
@@ -740,7 +741,7 @@ RMSE(pred.regtree.test, test$charges)
 R2(pred.regtree.test, test$charges)
 ```
 
-- Neural Network model:
+-   Neural Network model:
 
 ```{r}
 pred.nn.test <- read.csv(file ='./results/predictions_nn.csv', sep = ' ', header = FALSE)
