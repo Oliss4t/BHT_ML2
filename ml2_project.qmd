@@ -14,6 +14,44 @@ editor_options:
     wrap: sentence
 ---
 
+# Machine Learning 2: Prediction the Individual Medical Cost
+
+\pagebreak
+
+## Project Goal and Outline
+
+<font style='color: #000000; background-color: #FF0000'>**Can add more as needed when all is done, is finished for now**</font>
+
+The task at hand is a regression problem.
+Broadly speaking, we wish to create a series of models, each of which will be able to make predictions on a withheld test test.
+The dataset in question is a Medical Cost dataset.
+The variable we wish to predict is the expected insurance premium for a given individual based on the following input variables:
+
+-   age
+-   sex: male or female
+-   Body mass index, is a measure of one's weight relative to their height
+-   children: Number of children/dependants also covered under this person's health insurance
+-   smoker: Whether the person smokes or not
+-   region: For locations: northeast, southeast, southwest, northwest. All refer to the United States
+-   charges: The premium billed by the health insurance company. This is the predictor variable
+
+Of course, some of these variables seem obvious in how they affect a person's insurance premium; a 98 year-old obese smoker will have a higher insurance premium than a 24 year-old non-smoker with a healthy BMI.
+However, through some exploratory data analysis as well as by comparing our methods, a more discerning picture of how each variable impacts the value we wish to predict will be discussed.
+
+There will be three models compared to each other: a baseline model, which consists of a simple linear regression; a regression tree; and a neural network.
+The best model is ultimately decided upon by using the Root Mean Squared error, although other metrics, where suitable, will be used to influence our decision making.
+
+For both the Neural Network and the Regression Tree models, we wish to find a 'best' Neural Network and a 'best' Regression Tree with which to work.
+For this purpose, these models are initially trained only on the train split (as outlined further on), and the 'best' model for each is decided upon based on their performance on a validation split.
+As such, the selection for the best model in our two algorithm classes is based on the validation error.
+
+It is important to emphasise that this leaves the test data untouched at the stage when these models are created, leaving the test data purely for the final model comparison between the best Neural Net and the best Regression Tree.
+Then when ultimately comparing the two chosen models, these are retrained on the combined train and validation splits, and finally tested on the test set, which has been withheld for this purpose.
+
+This report will conclude with a discussion of our findings, an examination of what worked and what did not work, and will also mention avenues for future work.
+
+## Dateset and Preprocessing
+
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 ## Load libraries
 library(dlookr)
@@ -27,39 +65,12 @@ library(rpart)
 library(rpart.plot)
 ```
 
-# Project Goal and Outline
-
-<font style='color: #000000; background-color: #FF0000'>**Can add more as needed when all is done, is finished for now**</font>
-
-The task at hand is a regression problem. Broadly speaking, we wish to create a series of models, each of which will be able to make predictions on a withheld test test. The dataset in question is a Medical Cost dataset. The variable we wish to predict is the expected insurance premium for a given individual based on the following input variables:
-
-* age
-* sex: male or female
-* Body mass index, is a measure of one's weight relative to their height
-* children: Number of children/dependants also covered under this person's health insurance
-* smoker: Whether the person smokes or not
-* region: For locations: northeast, southeast, southwest, northwest. All refer to the United States
-* charges: The premium billed by the health insurance company. This is the predictor variable
-
-Of course, some of these variables seem obvious in how they affect a person's insurance premium; a 98 year-old obese smoker will have a higher insurance premium than a 24 year-old non-smoker with a healthy BMI. However, through some exploratory data analysis as well as by comparing our methods, a more discerning picture of how each variable impacts the value we wish to predict will be discussed.
-
-There will be three models compared to each other: a baseline model, which consists of a simple linear regression; a regression tree; and a neural network. The best model is ultimately decided upon by using the Root Mean Squared error, although other metrics, where suitable, will be used to influence our decision making. 
-
-For both the Neural Network and the Regression Tree models, we wish to find a 'best' Neural Network and a 'best' Regression Tree with which to work. For this purpose, these models are initially trained only on the train split (as outlined further on), and the 'best' model for each is decided upon based on their performance on a validation split. As such, the selection for the best model in our two algorithm classes is based on the validation error.
-
-It is important to emphasise that this leaves the test data untouched at the stage when these models are created, leaving the test data purely for the final model comparison between the best Neural Net and the best Regression Tree. Then when ultimately comparing the two chosen models, these are retrained on the combined train and validation splits, and finally tested on the test set, which has been withheld for this purpose.
-
-This report will conclude with a discussion of our findings, an examination of what worked and what did not work, and will also mention avenues for future work.
-
-
 ```{r,, include=FALSE , include=FALSE}
 ## Load data
 
 df.insurance <- read.csv(file ='./data/insurance.csv', header = TRUE)
 describe(df.insurance)
 ```
-
-# Dateset and Preprocessing
 
 -   a short description of your data
 
@@ -112,21 +123,18 @@ test <- read.csv(file ='./data/test.csv', header = TRUE)
 
 ```
 
-# EDA
+## EDA
 
 One of the objectives of preliminary data analysis to get a feel for the data you are dealing with by describing the key features of the data and summarizing the results.
 
 -   Plots correlation netween numerical features
-
 
 On the correlation matrix plot we see, that Charges has the strongest correlation with Age (0.3) and Children only 0.068.
 For the correlations between the explanatory variables the following stand out:
 
 <font style='color: #000000; background-color: #FF0000'>**include sex, smoker and region as well.**</font>
 
--   0.938: Economy and Internet
-...
-
+-   0.938: Economy and Internet ...
 
 ```{r}
 chart.Correlation(df.insurance[num.cols], histogram = TRUE, pch = 19)
@@ -138,8 +146,6 @@ chart.Correlation(df.insurance[num.cols], histogram = TRUE, pch = 19)
 ggplot(df.insurance, aes(x = age, y = charges, fill = smoker, size = bmi, alpha = .3)) +
   geom_point(pch = 21) +
   scale_size_continuous(range = c(0, 10))
-
-#eda_report(df.insurance, charges, output_format = "html", output_file = "EDA_insurance.html")
 
 ```
 
@@ -185,7 +191,6 @@ RMSE(lm1.pred$fit, test$charges)
 R2(lm1.pred$fit, test$charges)
 # 0.773166
 ```
-
 
 ## Algorithm 1 - Tree Models
 
@@ -361,5 +366,21 @@ rpart.plot(rpart(charges~.,train,cp=0.01))
 ## Model Comparrison
 
 -   fair comparison of the two methods using the test data
+
+```{r}
+pred.regtree.test <- predict(regtree, newdata = test)
+
+RMSE(pred.regtree.test, test$charges)
+R2(pred.regtree.test, test$charges)
+```
+
+```{r}
+pred.nn.test <- read.csv(file ='./results/predictions_nn.csv', sep = ' ', header = FALSE)
+pred.nn.test <- t(pred.nn.test)
+pred.nn.test <- head(pred.nn.test, - 1)
+
+RMSE(pred.nn.test, test$charges) 
+R2(pred.nn.test, test$charges) 
+```
 
 # Future Work and Discussion
