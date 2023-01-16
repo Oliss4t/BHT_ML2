@@ -14,18 +14,15 @@ editor_options:
     wrap: sentence
 ---
 
-# Machine Learning 2: Prediction the Individual Medical Cost
+# Machine Learning 2: Prediction of the Individual Medical Cost
 
 \pagebreak
 
 ## Project Goal and Outline
 
 The task at hand is a regression problem.
-
-Broadly speaking, we wish to create a series of models, each of which will be able to make predictions on a withheld test test.
-
+Broadly speaking, we wish to create a series of models, each of which will be able to make predictions on a withheld test set.
 The dataset in question is a Medical Cost dataset.
-
 The variable we wish to predict is the expected insurance premium for a given individual based on the following input variables:
 
 -   age
@@ -33,29 +30,24 @@ The variable we wish to predict is the expected insurance premium for a given in
 -   Body mass index, is a measure of one's weight relative to their height
 -   children: Number of children/dependants also covered under this person's health insurance
 -   smoker: Whether the person smokes or not
--   region: Four locations: northeast, southeast, southwest, northwest. All refer to the United States
+-   region: Four locations: northeast, southeast, southwest, and northwest. All refer to the United States
 -   charges: The premium billed by the health insurance company. This is the predictor variable
 
 Of course, some of these variables seem obvious in how they affect a person's insurance premium; a 98 year-old obese smoker will have a higher insurance premium than a 24 year-old non-smoker with a healthy BMI.
-
 However, through some exploratory data analysis as well as by comparing our methods, a more discerning picture of how each variable impacts the value we wish to predict will be discussed.
 
 There will be three models compared to each other: a baseline model, which consists of a simple linear regression; a regression tree; and a neural network.
 The best model is ultimately decided upon by using the Root Mean Squared error, although other metrics, where suitable, will be used to influence our decision making.
-
 For both the Neural Network and the Regression Tree models, we wish to find a 'best' Neural Network and a 'best' Regression Tree with which to work.
-
 For this purpose, these models are initially trained only on the train split (as outlined further on), and the 'best' model for each is decided upon based on their performance on a validation split.
-
-As such, the selection for the best model in our two algorithm classes is based on the validation error.
+As such, the selection of the best model in our two algorithm classes is based on the validation error.
 
 It is important to emphasise that this leaves the test data untouched at the stage when these models are created, leaving the test data purely for the final model comparison between the best Neural Net and the best Regression Tree.
-
 Then when ultimately comparing the two chosen models, these are retrained on the combined train and validation splits, and finally tested on the test set, which has been withheld for this purpose.
 
 This report will conclude with a discussion of our findings, an examination of what worked and what did not work, and will also mention avenues for future work.
 
-## Dateset and Preprocessing
+## Dataset and Preprocessing
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 ## Load libraries
@@ -82,14 +74,18 @@ df.insurance <- read.csv(file ='./data/insurance.csv', header = TRUE)
 describe(df.insurance)
 ```
 
-The dataset we used is included in a Book called "Machine Learning with R" by Brett Lantz and is also available on Kaggle. It can be downloaded via the following links:
+The dataset we used is included in a Book called "Machine Learning with R" by Brett Lantz and is also available on Kaggle.
+It can be downloaded via the following links:
 
 -   https://github.com/stedy/Machine-Learning-with-R-datasets
 -   https://www.kaggle.com/datasets/mirichoi0218/insurance
 
-It contains 1338 rows, 7 columns and there are no missing values. The 6 predictor variables are like in the project outline introduced: age(numeric, integer), sex(female / male), BMI(numeric, float), children(numeric, integer), smoker(boolean) and region(categorical). The outcome variable is "charges" (numeric, float).
+It contains 1338 rows, 7 columns and there are no missing values.
+The 6 predictor variables are like in the project outline introduced: age(numeric, integer), sex(female/male), BMI(numeric, float), children(numeric, integer), smoker(boolean) and region(categorical).
+The outcome variable is "charges" (numeric, float).
 
-The only preprocessing we had to do was encoding the categorical features as factor variables. Next we split our dataset into 60% train set, 20% validation and 20% test set, like it is ask in the project description.
+The only preprocessing we had to do was encoding the categorical features as factor variables.
+Next we split our dataset into a 60% train set, a 20% validation and a 20% test set, as it is asked in the project description.
 
 ```{r include=FALSE}
 num.cols <- unlist(lapply(data, is.numeric))
@@ -100,8 +96,6 @@ df.insurance <- df.insurance %>%
   mutate(smoker = factor(smoker, levels = unique(df.insurance$smoker))) %>%
   mutate(region = factor(region, levels = unique(df.insurance$region)))
 ```
-
-
 
 ```{r include=FALSE}
 
@@ -133,21 +127,31 @@ One of the objectives of exploratory data analysis is to get a feel for the data
 
 The first thing we can do is to take a look at the descriptive statistics via the summary function and the histograms.
 
-- we have individuals ranging from the age of 18 to 64 with a mean and median around 39 ages.
+-   we have individuals ranging from the age of 18 to 64 with a mean and median around 39 ages.
 
-- the sex is almost perfectly balanced as 49.5% of the individuals are female and 50.5% are male.
+-   the sex is almost perfectly balanced as 49.5% of the individuals are female and 50.5% are male.
 
-- the BMI is ranging from 15.96 to 53.13 with a mean and median around 30. The BMI is calculated by the following formula:
+-   the BMI is ranging from 15.96 to 53.13 with a mean and median around 30.
+    The BMI is calculated by the following formula:
 
 $$BMI = \frac{mass_{kg}}{{height_m}^2}$$
 
-A common use of the BMI is to assess how far an individual's body weight departs from what is normal for a person's height. The WHO regards an adult BMI of less than 18.5 as underweight, a BMI of 25 or more is as overweight and 30 or more is considered obese. From the summary and the histogram we can clearly see, that our population of individuals is in mean considered obese and therefore an unhealthy population.
+A common use of the BMI is to assess how far an individual's body weight departs from what is normal for a person's height.
+The WHO regards an adult BMI of less than 18.5 as underweight, a BMI of 25 or more as overweight and 30 or more is considered obese.
+From the summary and the histogram, we can clearly see, that our population of individuals is in mean considered obese and therefore an unhealthy population.
 
-Most of the individuals have no children, the mean is 1 child and the maximum is 5. Regarding the factor feature smoker the dataset is unbalanced. Only 20.5% of our individuals are smoker, respectively 79.5% are non smoker. The region is well balanced again between the four categories "southwest","southeast","northwest" and "northeast".
+Most of the individuals have no children, the mean is 1 child and the maximum is 5.
+Regarding the factor feature smoker, the dataset is unbalanced.
+Only 20.5% of our individuals are smokers, respectively 79.5% are non smokers.
+The region is well balanced again between the four categories "southwest", "southeast", "northwest" and "northeast".
 
-Last we have our predictor variable charges. The minimum of a health insurance charge is 1122\$, the median is 9382\$, the mean 13270\$ and the maximum 63770\$. From the difference of median and mean we can already tell that the distribution is skewed to the right (positively skewed). This means that there are a few large values that are pulling the mean higher, but the majority of the data is concentrated around the median.
-
-Looking at the boxplot for the charge we can confirm that. We can inspect a long tail of high values and a shorter tail of low values. We have no symmetric distribution.
+Last we have our predictor variable charges.
+The minimum of a health insurance charge is 1122\$, the median is 9382\$, the mean 13270\$ and the maximum 63770\$.
+From the difference of median and mean we can already tell that the distribution is skewed to the right (positively skewed).
+This means that there are a few large values that are pulling the mean higher, but the majority of the data is concentrated around the median.
+Looking at the boxplot for the charge we can confirm that.
+We can inspect a long tail of high values and a shorter tail of low values.
+We have no symmetric distribution.
 
 ```{r}
 summary(df.insurance)
@@ -173,28 +177,49 @@ plot_histograms <- function(df) {
 plot_histograms(df.insurance)
 ```
 
-Next, we want to better understand the relationships between our different variables in the dataset. Therefore we use the correlation matrix to get insights about our data regarding the linearity and their respective strengths. A positive correlation means that as one variable increases, the other variable also increases, and a negative correlation means that as one variable increases, the other variable decreases. A correlation value of 1 or -1 indicates a perfect linear relationship between the variables. A correlation value of 0 indicates that there is no linear relationship between the variables. 
+Next, we want to better understand the relationships between our different variables in the dataset.
+Therefore we use the correlation matrix to get insights into our data regarding the linearity and their respective strengths.
+A positive correlation means that as one variable increases, the other variable also increases, and a negative correlation means that as one variable increases, the other variable decreases.
+A correlation value of 1 or -1 indicates a perfect linear relationship between the variables.
+A correlation value of 0 indicates that there is no linear relationship between the variables.
 
-Note however, that correlation does not imply causality, it just indicates that two variables are related. That means the correlation between two variables may be high, but may be that the correlation is due to a relationship between the two variables and a third variable. This concept is called multicollinearity.
+Note however, that correlation does not imply causality, it just indicates that two variables are related.
+That means the correlation between two variables may be high, but that the correlation is due to a relationship between the two variables and a third variable.
+This concept is called multicollinearity.
 
-This has to be kept in mind for our baseline model. If we create a linear model and want to interpret the coefficients on how they influence our charge, multicollinearity can be a problem, as interpretability assumes that you can only change the value of one explanatory variable and not the others at the same time. This of course is only true if there are no correlations between the explanatory variables. If this independence does not hold, we have a problem of multicollinearity.
+This has to be kept in mind for our baseline model.
+If we create a linear model and want to interpret the coefficients on how they influence our charge, multicollinearity can be a problem, as interpretability assumes that you can only change the value of one explanatory variable and not the others at the same time.
+This of course is only true if there are no correlations between the explanatory variables.
+If this independence does not hold, we have a problem of multicollinearity.
 
-Multicollinearity can result in the coefficients swinging wildly based on which other independent variables are in the model. Therefore the coefficients become very sensitive to small changes in the model and can not be easily interpreted. One way to detect multicollinearity is to examine the correlation matrix and look for high correlation coefficients between the multiple explanatory variables.
+Multicollinearity can result in the coefficients swinging wildly based on which other independent variables are in the model.
+Therefore the coefficients become very sensitive to small changes in the model and can not be easily interpreted.
+One way to detect multicollinearity is to examine the correlation matrix and look for high correlation coefficients between the multiple explanatory variables.
 
-As the correlation metric can only be calculate for numeric values, we get the correlation scores for the features age, bmi, children and charges. Charges has the strongest correlation with Age (+0.299), then bmi (+0.198) and last children with only +0.068. The highest correlation between explanatory variables is +0.109 between bmi and age. As this quite low, we dont have a problem of multicollinearity betweeen the numeric explanatory variables.
+As the correlation metric can only be calculated for numeric values, we get the correlation scores for the features age, bmi, children and charges.
+Charges has the strongest correlation with Age (+0.299), then bmi (+0.198) and last children with only +0.068.
+The highest correlation between explanatory variables is +0.109 between bmi and age.
+As this is quite low, we don't have a problem of multicollinearity between the numeric explanatory variables.
 
 ```{r,echo=FALSE, message=FALSE,fig.width=10,fig.height=8}
 plot_cor_matrix <- ggpairs(df.insurance, title="Correlation Matrix", )
 plot_cor_matrix
 ```
 
-One way to assess the influence of categorical variables on an outcome variable is through a one-way ANOVA, which compares the means of a numerical outcome variable across different levels of a categorical variable. Thereby we could determine if there is a significant difference in the means of the outcome variable between the different levels of the categorical variable. 
+One way to assess the influence of categorical variables on an outcome variable is through a one-way ANOVA, which compares the means of a numerical outcome variable across different levels of a categorical variable.
+Thereby we could determine if there is a significant difference in the means of the outcome variable between the different levels of the categorical variable.
 
-However, the ANOVA assumes that the data is normally distributed, independent and that the variances of the groups are equal. We already found that outcome "charges" is positively skewed and not normally distributed. Thereby, the assumption of the ANOVA fails. We can however use the non-parametric alternatives called Kruskal-Wallis test.
+However, the ANOVA assumes that the data is normally distributed, independent and that the variances of the groups are equal.
+We already found that outcome "charges" is positively skewed and not normally distributed.
+Thereby, the assumption of the ANOVA fails.
+We can however use the non-parametric alternatives called Kruskal-Wallis test.
 
-The output of Kruskal-Wallis test statistics gives us the p-value, though which we can determine the significance of the test. A small p-value (typically less than 0.05) indicates strong evidence against the null hypothesis, which in this case is that there is no difference in the medians of the outcome variable between the different levels of the categorical variable.
+The output of Kruskal-Wallis test statistics gives us the p-value, through which we can determine the significance of the test.
+A small p-value (typically less than 0.05) indicates strong evidence against the null hypothesis, which in this case is that there is no difference in the medians of the outcome variable between the different levels of the categorical variable.
 
-As only the p-value of the categorical variable "smoker" is below the significance level of 5%, we can only reject the null hypothesis for smoker and therefore say, there is a significant difference in the medians of the outcome variable between beeing a smoker and not. We can confirm the result also by looking at the boxplot, split up by category. This is also visible in small boxplots in the correlation matrix. 
+As only the p-value of the categorical variable "smoker" is below the significance level of 5%, we can only reject the null hypothesis for smoker and therefore say, there is a significant difference in the medians of the outcome variable between being a smoker and not.
+We can confirm the result also by looking at the boxplot, split up by category.
+This is also visible in small boxplots in the correlation matrix.
 
 ```{r, warning=FALSE, message=FALSE }
 kruskal.test(df.insurance$charge , df.insurance$sex)
@@ -230,26 +255,27 @@ grid.arrange(plot_sex,plot_smoker,plot_region, ncol=3 )
 
 ### Baseline - Linear Regression
 
-In order to check the performance of the chosen models, we first created simple linear regression model as a baseline model, with 'charges' as outcome variable and including all other columns ('age', 'sex', 'BMI', 'children', 'smoker', and 'region') as predictor variables.
+In order to check the performance of the chosen models, we first created a simple linear regression model as a baseline model, with 'charges' as the outcome variable and all other columns ('age', 'sex', 'BMI', 'children', 'smoker', and 'region') as predictor variables.
 
 #### Mathematical Overview
 
 The mathematical notation of a linear model represents a linear relationship between the outcome variable 'charges' and the predictor variables 'age', 'sex', 'BMI', 'children', 'smoker', and 'region'.
+The equation states that the outcome variable 'charges' is a linear combination of the predictor variables, with each predictor variable multiplied by a specific coefficient (beta).
+By default the categorical features are dummy encoded, to convert the categorical variable into multiple binary features, and then use these binary features as independent variables in the linear regression model.
+This allows the model to learn separate regression coefficients for each category of the original categorical variable.
 
-The equation states that the outcome variable 'charges' is a linear combination of the predictor variables, with each predictor variable multiplied by a specific coefficient (beta):
+$charges = \beta_{0} + \beta_{1}*age + \beta_{2}*sexmale + \beta_{3}*BMI + \beta_{4}*children + \beta_{5}*smokeryes \\ + \beta_{6}*regionnorthwest +\beta_{7}*regionsoutheast + \beta_{8}*regionsouthwest$
 
-$charges = \beta_{0} + \beta_{1}*age + \beta_{2}*sex + \beta_{3}*BMI + \beta_{4}*children + \beta_{5}*smoker + \beta_{6}*region$
-
-In this equation, 'charges' is represented as charges, the coefficients are represented as $\beta_{0}$, $\beta_{1}$, $\beta_{2}$, $\beta_{3}$, $\beta_{4}$, $\beta_{5}$, $\beta_{6}$ and predictor variables 'age', 'sex', 'BMI', 'children', 'smoker', and 'region' are represented as age, sex, BMI, children, smoker, region respectively.
+In this equation, 'charges' is represented as charges, the coefficients are represented as $\beta_{0}$, $\beta_{1}$, $\beta_{2}$, $\beta_{3}$, $\beta_{4}$, $\beta_{5}$, $\beta_{6}$, $\beta_{7}$, $\beta_{8}$ and predictor variables 'age', 'sex', 'BMI', 'children', 'smoker', and 'region' are represented as age, sexmale, BMI, children, smokeryes, regionnorthwest, regionsoutheast and regionsouthwest respectively.
+Note, that sexfemale is indirectly encoded in sexmale being 0, smokerno is indirectly encoded in smokeryes being 0 and regionnortheast in all other region variables being 0.
 
 The equation can be used to make predictions about the outcome variable 'charges' based on the values of the predictor variables.
-
 For example, if we know the values of 'age', 'sex', 'BMI', 'children', 'smoker', and 'region' for a specific individual, we can plug those values into the equation and solve for 'charges'.
-
 The result of this calculation would be an estimate of the individual's 'charges'.
 
-If our linear model has good predictability, we can also interpret the coefficients on how they influence the outcome. As we found no strong multicollinearity during EDA we can do that in the following. This is called regression analysis.
-
+If our linear model has good predictability, we can also interpret the coefficients on how they influence the outcome.
+As we found no strong multicollinearity during EDA, we can do that in the following.
+This is called regression analysis.
 
 #### Hyperparameter Optimization
 
@@ -260,20 +286,17 @@ lm1 <- lm(charges ~ ., train)
 summary(lm1)
 ```
 
-
-
 #### Performance
 
 Finally, we predict the outcome on the validation set and calculate RMSE and R2 scores.
+The R2 score of 0.71 is good enough for interpreting the coefficients.
+From the model summary we can see hat the following explanatory variables are statistically significant:
 
-The R2 score of 0.71 is good enough for interpreting the coefficients. From the model summary we can see hat the following explanatory variables are statistically significant:
-
--   Age has an positive effect on the charges. One unit change on age results in an increase of the charges of **259.98$**
--   BMI has an positive effect on the charges. One unit change on BMI results in an increase of the charges of **327.40$**
--   Children has an positive effect on the charges. One unit change on Children results in an increase of the charges of **477.80$**
--   BMI has an positive effect on the charges. One unit change on BMI results in an increase of the charges of **327.40$**
--   Smoker has an positive effect on the charges. Being a smoker results in an increase of the charges of **23594.95$**
-
+-   Age has an positive effect on the charges. One unit change on age results in an increase of the charges of **259.98\$**
+-   BMI has an positive effect on the charges. One unit change on BMI results in an increase of the charges of **327.40\$**
+-   Children has an positive effect on the charges. One unit change on Children results in an increase of the charges of **477.80\$**
+-   BMI has an positive effect on the charges. One unit change on BMI results in an increase of the charges of **327.40\$**
+-   Smoker has an positive effect on the charges. Being a smoker results in an increase of the charges of **23594.95\$**
 
 ```{r}
 pred.lm.test <- predict(lm1, test, se.fit = TRUE)
@@ -285,19 +308,16 @@ R2(pred.lm.test$fit, test$charges)
 
 #### Mathematical Overview
 
-A regression tree is a specific class of tree which will predict a numerical dependent variable based on a number of explanatory variables
-
+A regression tree is a specific class of tree which will predict a numerical dependent variable based on a number of explanatory variables.
 They can deal with the situation in which the explanatory variables interact with one another (BMI and age are in all likelihood in someway dependent).
 
 This can be difficult to model through simpler models like linear regression; however, by partitioning the data into smaller regions, the interactions between the explanatory variables, potentially very complex, can become more manageable.
-
 In a tree model, this partitioning and sub-partitioning (i.e. recursively partitioning each partition) is done by the tree.
 
 We want a set of predictor variables $X_1, ..., X_P$, into some number $J$ distinct and mutually exclusive regions (partitions) $R_1, ..., R_J$.
 In this description, each observation that falls into the region $R_j$ will have the same value assigned to it.
-
 These regions are decided upon as follows: we want to find a selection of regions $R_1, ..., R_J$ such that the residual squared error (RSS) is minimised.
-I.e. minimise
+I.e. minimise:
 
 $\Sigma_{j=1}^J$ $\Sigma_{i \in R_j}$ $(y_i - \hat{y}_{R_j})^2$
 
@@ -305,31 +325,23 @@ where $\hat{y}_{R_j}$ is the mean value for the predictor variable in that given
 
 The splitting is done in a top-down, greedy manner, where the splitting starts at the top of the tree (i.e. all data-points belong to the same region), then this is split in 2, and this process is repeated for each split in the tree.
 It is greedy in the sense that it does not look ahead steps into the future; it simply predicts the best split for the split in question.
-
 The actual splitting is done as follows.
 
 A predictor variable $X_j$ and a splitting point $s$ such that the splitting regions $X|X_j < s$ and $X|X_j \ge s$ provides the smallest possible RSS.
-
-This is then repeated for the other predictor variables until the predictor variable which gave had the value of $s$ which gave the smallest RSS is found and this is chosen as the variable for this split in the tree.
-
+This is then repeated for the other predictor variables until the predictor variable which gave the value of $s$ which gave the smallest RSS is found and this is chosen as the variable for this split in the tree.
 We do this until a stopping criteria is found, one which will ideally neither underfit nor overfit the tree.
 
 In our case, we are examining the complexity parameter in order to do this.
-
 Of course, if we completely overfit the tree, there will be the smallest RSS; however, we want to penalise overfitting in some way.
-
 The approach used here is penalised least squares (PLS).
 
 Let us call our full tree $T_0$.
-
 We want to find a pruned tree $T_\alpha$ $\subset$ $T_0$ such that
 
 $PLS(\alpha) = \Sigma_{j \in |T_\alpha|}^J$ $\Sigma_{i \in R_j}$$(y_i - \hat{y}_{R_j})^2 + \alpha |T_\alpha|$
 
 with $\alpha$ greater than or equal to zero, and the other variables as defined already.
-
 $\alpha$ is the complexity parameter.
-
 It can be found using $K$-fold cross validation.
 
 The rule of thumb that is used by the rpart package is to take the largest value of the complexity parameter that is within 1 standard deviation of the smallest value out of the cross validation setup.
@@ -337,7 +349,9 @@ The rule of thumb that is used by the rpart package is to take the largest value
 #### Hyperparameter Optimization
 
 This is how the rpart regression tree works out of the box: the standard hyperparameter settings form a baseline of the regression trees.
-Rpart uses 10-fold cross validation as its default to find the complexity parameter. The tree looks as follows. To explain how to interpret this output, the first split is made on whether or not one is a smoker; if one is not a smoker, the next split is based on age; otherwise, the next split is made on BMI.
+Rpart uses 10-fold cross validation as its default to find the complexity parameter.
+The tree looks as follows.
+To explain how to interpret this output, the first split is made on whether or not one is a smoker; if one is not a smoker, the next split is based on age; otherwise, the next split is made on BMI.
 
 ```{r, echo=FALSE}
 tree.data<-rpart(charges~.,train)
@@ -348,9 +362,11 @@ The next tree to be formed will be a full tree (i.e. totally overfitted) as disc
 
 We can see in the below plot how the error decreases as the complexity parameter decreases.
 
-Based on this plot a suitable complexity parameter is selected, and this quite interpretable decision tree is shown. 
+Based on this plot a suitable complexity parameter is selected, and this quite interpretable decision tree is shown.
 
-Note, there exist other error measures for the splitting criteria and this will be mentioned in the section on future work. Note that the cp=0.019 was gotten from reading the cpmatrix and applying the rule of picking a cp within 1sd of the smallest error; cpmatrix has been commented out to avoid it being printed in the report. The splitting rule, now shown in an easy-to-read plot, is similar to the one outputted by rpart's default settings.
+Note, there exist other error measures for the splitting criteria and this will be mentioned in the section on future work.
+Note that the cp=0.019 was gotten from reading the cpmatrix and applying the rule of picking a cp within 1sd of the smallest error; cpmatrix has been commented out to avoid it being printed in the report.
+The splitting rule, now shown in an easy-to-read plot, is similar to the one outputted by rpart's default settings.
 
 ```{r, echo=FALSE}
 
@@ -360,7 +376,7 @@ tree.data.full<-rpart(charges~.,train,cp=0)
 plotcp(tree.data.full)
 
 prune.data=prune(tree.data,cp=0.019)
-rpart.plot(prune.data)
+rpart.plot(prune.data,type=5)
 ```
 
 Let us predict and get some metrics as was done for the baseline model.
@@ -418,19 +434,23 @@ RMSE(predictions, valid$charges)
 R2(predictions, valid$charges) 
 ```
 
-It clearly finds a different cp than before; however, it provides the same RMSE and R2 as the other two trees discussed. This is perhaps unsurprising as they all are creating the same tree (compare first and last plots). Hence this tree seems to offer us the best solution.
+It clearly finds a different cp than before; however, it provides the same RMSE and R2 as the other two trees discussed.
+This is perhaps unsurprising as they all are creating the same tree (compare first and last plots).
+Hence this tree seems to offer us the best solution.
 
 #### Performance
 
-For a single tree you can interpret a fitted model by inspecting the text output of the tree or the tree diagram itself. We could also calculate the Increase in Node Purity and Mean decrease in Accuracy, but that is most often done for ensemble methods, as you e.g can not plot all trees of a random forest. Given that Smoking, BMI and Age are the only variables considered by our 'best' model, we can consider that these variables are the most important.
+For a single tree you can interpret a fitted model by inspecting the text output of the tree or the tree diagram itself.
+We could also calculate the Increase in Node Purity and Mean decrease in Accuracy, but that is most often done for ensemble methods, as you e.g can not plot all trees of a random forest.
+Given that Smoking, BMI and Age are the only variables considered by our 'best' model, we can consider that these variables are the most important.
 
 The best result was for the final tree found via hyperparameter optimisation which gave an RMSE of \[1\] 5076.103 and an R2 of \[1\] 0.8478985 on the validation data.
 
+The tree once again looks as follows:
 
-The tree once again looks as follows: 
 ```{r}
 printcp(rpart(charges~.,train))
-rpart.plot(rpart(charges~.,train))
+rpart.plot(rpart(charges~.,train),type=5)
 ```
 
 ### Algorithm 2 - Neural Networks
@@ -438,20 +458,15 @@ rpart.plot(rpart(charges~.,train))
 #### Mathematical Overview
 
 A neural network is a type of machine learning model that is inspired by the structure and function of the human brain.
-
 It is composed of layers of interconnected nodes, or "neurons," that process and transmit information.
-
 Neural networks are capable of handling complex and non-linear relationships between input and output variables.
 
 A neural network can be represented mathematically as a series of layers, with each layer performing a set of mathematical operations on the input it receives.
 The output of one layer serves as the input to the next layer.
-
 The first layer, called the input layer, receives the input variables, and the last layer, called the output layer, produces the output variable(s).
-
 In between the input and output layers, there are one or more hidden layers that perform computations on the input data.
 
 The mathematical notation for a neural network can be quite complex as it depends on the architecture of the network, the number of layers and the activation functions used.
-
 In general, a neural network can be represented mathematically as:
 
 $y = f(W_n * f(W_{n-1} * f(...f(W_1 * x + b_1) + b_2)... + b_n) + b_{n+1})$
@@ -576,7 +591,6 @@ The class takes four parameters:
 -   batch_size: an integer representing the batch size to use during training
 
 The **init** method is called when the class is first instantiated and sets up the neural network architecture.
-
 It creates a series of hidden layers using the helper function hidden_layer.
 The input layer of the network is defined with 6 input features, and the output layer has 1 output feature.
 
@@ -658,9 +672,7 @@ class RegressionModel(pl.LightningModule):
 ```
 
 The mathematical notation for the neural network model defined above can be represented as a series of layers, with each layer performing a set of mathematical operations on the input it receives.
-
 The output of one layer serves as the input to the next layer.
-
 The mathematical notation for each hidden layer would be:
 
 $h_i = f(W_i * h_{i-1} + b_i)$
@@ -696,9 +708,7 @@ Where:
 -   $b_{n+1}$ is the bias term for the output layer
 
 The optimizer used in the model above is the Adam optimizer.
-
 Adam is an optimization algorithm that combines the benefits of the Adaptive Gradient Algorithm (AdaGrad) and Root Mean Square Propagation (RMSProp).
-
 The mathematical notation for the Adam optimizer is:
 
 $\theta_{t+1} = \theta_t - \frac{\alpha}{\sqrt{\hat{v}_t} + \epsilon}\hat{m}_t$
@@ -735,7 +745,6 @@ The **Trainer** class is initialized with the following parameters:
 -   auto_lr_find: True, this will use the learning rate finder to find a good initial learning rate before training.
 
 The fit method is called on the trainer object with the model as its argument, this will start the training process.
-
 The trainer will take care of the training loop, logging progress, and saving the model.
 
 ```{python eval=FALSE}
@@ -777,10 +786,10 @@ The HPO process on the neural network model was performed using **Optuna** libra
 
 We let Optuna optimize 4 parameters for us:
 
-- 'num_neurons': number of neurons in each layer, between 16 and 256
-- 'batch_size': amount of data points used at once, between 32 and 512
-- 'layers': amount of layers, between 1 and 5
-- 'learning_rate': learning rate of the Adam optimizer, between 1e-5 and 1e-1
+-   'num_neurons': number of neurons in each layer, between 16 and 256
+-   'batch_size': amount of data points used at once, between 32 and 512
+-   'layers': amount of layers, between 1 and 5
+-   'learning_rate': learning rate of the Adam optimizer, between 1e-5 and 1e-1
 
 ```{python eval=FALSE}
 def optimize_model(trial):
@@ -814,7 +823,8 @@ As the result, MSE of 18894440 on the validation loss could be achieved, which i
 
 ## Model Comparison
 
-In this chapter, we want to present a fair comparison of the models. Therefore, we use the test set, which none of the model have seen yet and predict outcome variable using each model's best parameters, which we determined using HPO.
+In this chapter, we want to present a fair comparison of the models.
+Therefore, we use the test set, which none of the model have seen yet and predict outcome variable using each model's best parameters, which we determined using HPO.
 
 We compare RMSE and R2 scores for the baseline model, for the regression tree model and for the neural network model.
 
@@ -849,11 +859,16 @@ Both of the models could outperform the baseline model, but neural network seems
 
 ## Future Work and Discussion
 
-On both of our chosen metrics, it is clear that the regression tree outperforms the baseline linear model. In turn, the Neural Network outperforms both of these. However, while there is a significant difference in terms of how the tree model performed over the linear model, the increase in performance of the neural network over the tree model is comparatively small. Because of this, it could be preferable to choose the tree model as or model of choice over the neural network, as it allows a greater explainability, in terms of how it can be visualised, easily explained to the non-expert, and understood, when compared to the neural network which contains some of the 'black box' type problems which some neural networks are prone to i.e. we cannot easily 'see inside' it to know what it is making its decisions based on.
+In this study, we evaluated the performance of three different models: a linear model, a regression tree, and a neural network. Our results showed that the regression tree outperformed the linear model on both of the chosen metrics. The neural network, in turn, outperformed both the linear model and the regression tree.
+
+The linear model has the advantage of being the easiest to interpret of all three models, even though its performance is not as good as the other two models. The difference in performance between the regression tree and the linear model is significant, but the increase in performance of the neural network over the tree model is relatively small. This suggests that the regression tree may be a more suitable model for this task because it offers greater explainability in terms of how it can be visualized, easily explained to non-experts, and understood. The neural network, on the other hand, has some of the "black box" problems that some neural networks are prone to; it is difficult to "see inside" the model to understand how it is making its decisions. Note however, that the regression tree is also not a perfect model, as it only predicts 4 values, as we saw in the tree plot. This is not ideal for predicting a continuous outcome.
+
+For future work, we could attempt to improve the interpretability of the neural network by using model-agnostic tools such as SHAP values. Additionally, we could improve the current regression tree by including other parameters into the hyperparameter optimization, testing different splitting criteria such as gini index vs. entropy. If that doesn't improve performance, we could also build multiple trees and use the ensemble method Random Forest. However, this would reduce interpretability again. 
+
+In conclusion, the choice of model depends on the desired balance between performance and interpretability. While the neural network is the model that showed the best performance, the regression tree may be a more suitable choice for this task because of its greater explainability. 
 
 
-*Talk about doing the Gridsearch for the splitting criteria as well, gini index vs. entropy
-*Criticism of tree that it only predicts 4 values for what is a continuous variable
-*Upside of linear model is that it is possibly the most easy to interpret of all three, even if it does not perform as well
+
+
 
 
