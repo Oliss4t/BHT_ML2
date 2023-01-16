@@ -289,8 +289,6 @@ R2(pred.lm.test$fit, test$charges)
 
 #### Mathematical Overview
 
--   explanation what the model does, including mathematical notation
-
 A regression tree is a specific class of tree which will predict a numerical dependent variable based on a number of explanatory variables
 
 They can deal with the situation in which the explanatory variables interact with one another (BMI and age are in all likelihood in someway dependent).
@@ -345,28 +343,26 @@ The rule of thumb that is used by the rpart package is to take the largest value
 -   a description of your fitting process including, a summary of how you arrived at your final model, the choice of hyperparameters and how you made this choice,
 
 This is how the rpart regression tree works out of the box: the standard hyperparameter settings form a baseline of the regression trees.
-Rpart uses 10-fold cross validation as its default to find the complexity parameter.
+Rpart uses 10-fold cross validation as its default to find the complexity parameter. The tree looks as follows. To explain how to interpret this output, the first split is made on whether or not one is a smoker; if one is not a smoker, the next split is based on age; otherwise, the next split is made on BMI.
 
 ```{r, echo=FALSE}
 tree.data<-rpart(charges~.,train)
 print(tree.data)
 ```
 
-The next tree to be formed will be a full tree (i.e. totally overfitted) with complexity parameter equaling 0, which will then be pruned back.
+The next tree to be formed will be a full tree (i.e. totally overfitted) as discussed above, with complexity parameter equaling 0, which will then be pruned back.
 
 We can see in the below plot how the error decreases as the complexity parameter decreases.
 
-Based on this plot a suitable complexity parameter is selected, and this quite interpretable decision tree is shown.
+Based on this plot a suitable complexity parameter is selected, and this quite interpretable decision tree is shown. 
 
-Note, there exist other error measures for the splitting criteria and this will be discussed further on.
-
--   completly overfitte regression tree
+Note, there exist other error measures for the splitting criteria and this will be discussed further on. Note that the cp=0.019 was gotten from reading the cpmatrix and applying the rule of picking a cp within 1sd of the smallest error; cpmatrix has been commented out to avoid it being printed in the report. The splitting rule, now shown in an easy-to-read plot, is similar to the one outputted by rpart's default settings.
 
 ```{r, echo=FALSE}
 
 tree.data.full<-rpart(charges~.,train,cp=0)
 
-cpmatrix<-printcp(tree.data.full)
+#cpmatrix<-printcp(tree.data.full)
 plotcp(tree.data.full)
 
 prune.data=prune(tree.data,cp=0.019)
@@ -407,7 +403,9 @@ R2(pred.train.pruned, valid$charges)
 
 <font style='color: #000000; background-color: #FF0000'>**Do the Gridsearch for the splitting criteria as well, gini index vs. entropy**</font>
 
-Finding the optimal complexity parameter via grid search:
+Note that the default method and the one found via our rule of thumb find the same value and thus the same RMSE and R2 values.
+
+We will do some quick hyperparameter optimisation to finding the optimal complexity parameter via grid search:
 
 ```{r}
 param_grid <- expand.grid(cp = seq(0.01, 0.5, 0.01))
@@ -428,18 +426,19 @@ RMSE(predictions, valid$charges)
 R2(predictions, valid$charges) 
 ```
 
+It clearly finds a different cp than before; however, it provides the same RMSE and R2 as the other two trees discussed. This is perhaps unsurprising as they all are creating the same tree (compare first and last plots). Hence this tree seems to offer us the best solution.
+
 #### Performance
 
--   an appropriate assessment of the predicted values and <font style='color: #000000; background-color: #FF0000'>**Include variable importance. For a singel tree you can interpret a fitted model by inspecting the text output of the tree or the tree diagram itself. We could also calculate the Increase in Node Purity and Mean decrease in Accuracy, but that is most often done for ensembled methods, as you e.g can not plot all trees of a random forest.**</font>
+For a single tree you can interpret a fitted model by inspecting the text output of the tree or the tree diagram itself. We could also calculate the Increase in Node Purity and Mean decrease in Accuracy, but that is most often done for ensemble methods, as you e.g can not plot all trees of a random forest. Given that Smoking, BMI and Age are the only variables considered by our 'best' model, we can consider that these variables are the most important.
 
-The best result was for the final tree found via hyperparameter optimisation which gave an RMSE of \[1\] 4759.202 and an R2 of \[1\] 0.8432418 on the validation data.
+The best result was for the final tree found via hyperparameter optimisation which gave an RMSE of \[1\] 5076.103 and an R2 of \[1\] 0.8478985 on the validation data.
 
-It looks as follows
 
+The tree once again looks as follows: 
 ```{r}
-printcp(rpart(charges~.,train,cp=0.01))
-plotcp(rpart(charges~.,train,cp=0.01))
-rpart.plot(rpart(charges~.,train,cp=0.01))
+printcp(rpart(charges~.,train))
+rpart.plot(rpart(charges~.,train))
 ```
 
 ### Algorithm 2 - Neural Networks
