@@ -1,5 +1,5 @@
 ---
-title: "Machine Learning 2: Prediction the Individual Medical Cost"
+title: "Machine Learning 2: Prediction of the Individual Medical Cost"
 author: "Conor Fallon; Dennis Fast; Leonhard Liu; Tassilo Henninger"
 date: "17 1 2023"
 format:
@@ -285,7 +285,7 @@ RMSE(pred.lm.test$fit, test$charges)
 R2(pred.lm.test$fit, test$charges)
 ```
 
-### Algorithm 1 - Tree Models
+### Algorithm 1 - Regression Tree
 
 #### Mathematical Overview
 
@@ -858,3 +858,9 @@ Both of the models could outperform the baseline model, but neural network seems
 ## Future Work and Discussion
 
 On both of our chosen metrics, it is clear that the regression tree outperforms the baseline linear model. In turn, the Neural Network outperforms both of these. However, while there is a significant difference in terms of how the tree model performed over the linear model, the increase in performance of the neural network over the tree model is comparatively small. Because of this, it could be preferable to choose the tree model as or model of choice over the neural network, as it allows a greater explainability, in terms of how it can be visualised, easily explained to the non-expert, and understood, when compared to the neural network which contains some of the 'black box' type problems which some neural networks are prone to i.e. we cannot easily 'see inside' it to know what it is making its decisions based on.
+
+
+*Talk about doing the Gridsearch for the splitting criteria as well, gini index vs. entropy
+*Criticism of tree that it only predicts 4 values for what is a continuous variable
+
+
