@@ -20,8 +20,6 @@ editor_options:
 
 ## Project Goal and Outline
 
-<font style='color: #000000; background-color: #FF0000'>**Can add more as needed when all is done, is finished for now**</font>
-
 The task at hand is a regression problem.
 
 Broadly speaking, we wish to create a series of models, each of which will be able to make predictions on a withheld test test.
@@ -35,7 +33,7 @@ The variable we wish to predict is the expected insurance premium for a given in
 -   Body mass index, is a measure of one's weight relative to their height
 -   children: Number of children/dependants also covered under this person's health insurance
 -   smoker: Whether the person smokes or not
--   region: For locations: northeast, southeast, southwest, northwest. All refer to the United States
+-   region: Four locations: northeast, southeast, southwest, northwest. All refer to the United States
 -   charges: The premium billed by the health insurance company. This is the predictor variable
 
 Of course, some of these variables seem obvious in how they affect a person's insurance premium; a 98 year-old obese smoker will have a higher insurance premium than a 24 year-old non-smoker with a healthy BMI.
@@ -93,7 +91,7 @@ It contains 1338 rows, 7 columns and there are no missing values. The 6 predicto
 
 The only preprocessing we had to do was encoding the categorical features as factor variables. Next we split our dataset into 60% train set, 20% validation and 20% test set, like it is ask in the project description.
 
-```{r}
+```{r include=FALSE}
 num.cols <- unlist(lapply(data, is.numeric))
 num.cols <- c('age', 'bmi', 'children', 'charges')
 cat.cols <- c('sex', 'smoker', 'region')
@@ -105,7 +103,7 @@ df.insurance <- df.insurance %>%
 
 
 
-```{r}
+```{r include=FALSE}
 
 set.seed(1)
 inds <- partition(df.insurance$charges, p = c(train = 0.6, valid = 0.2, test = 0.2))
@@ -145,7 +143,7 @@ $$BMI = \frac{mass_{kg}}{{height_m}^2}$$
 
 A common use of the BMI is to assess how far an individual's body weight departs from what is normal for a person's height. The WHO regards an adult BMI of less than 18.5 as underweight, a BMI of 25 or more is as overweight and 30 or more is considered obese. From the summary and the histogram we can clearly see, that our population of individuals is in mean considered obese and therefore an unhealthy population.
 
-Most of the individuals have no children, the mean is 1 child and the maximum is 5. Regarding the factor feature smoker the dataset is unbalanced. Only 20.5% of our individuals are smoker, respectively 79.5% are non smoker. The region is good balanced again between the four categories "southwest","southeast","northwest" and "northeast".
+Most of the individuals have no children, the mean is 1 child and the maximum is 5. Regarding the factor feature smoker the dataset is unbalanced. Only 20.5% of our individuals are smoker, respectively 79.5% are non smoker. The region is well balanced again between the four categories "southwest","southeast","northwest" and "northeast".
 
 Last we have our predictor variable charges. The minimum of a health insurance charge is 1122\$, the median is 9382\$, the mean 13270\$ and the maximum 63770\$. From the difference of median and mean we can already tell that the distribution is skewed to the right (positively skewed). This means that there are a few large values that are pulling the mean higher, but the majority of the data is concentrated around the median.
 
@@ -175,9 +173,7 @@ plot_histograms <- function(df) {
 plot_histograms(df.insurance)
 ```
 
-Next, we want to better understand the relationships between our different variables in the dataset. Therefore we use the correlation matrix to get insights about our data regarding the 
-
-linearity and their strength. A positive correlation means that as one variable increases, the other variable also increases, and a negative correlation means that as one variable increases, the other variable decreases. A correlation value of 1 or -1 indicates a perfect linear relationship between the variables. A correlation value of 0 indicates that there is no linear relationship between the variables. 
+Next, we want to better understand the relationships between our different variables in the dataset. Therefore we use the correlation matrix to get insights about our data regarding the linearity and their respective strengths. A positive correlation means that as one variable increases, the other variable also increases, and a negative correlation means that as one variable increases, the other variable decreases. A correlation value of 1 or -1 indicates a perfect linear relationship between the variables. A correlation value of 0 indicates that there is no linear relationship between the variables. 
 
 Note however, that correlation does not imply causality, it just indicates that two variables are related. That means the correlation between two variables may be high, but may be that the correlation is due to a relationship between the two variables and a third variable. This concept is called multicollinearity.
 
@@ -198,7 +194,7 @@ However, the ANOVA assumes that the data is normally distributed, independent an
 
 The output of Kruskal-Wallis test statistics gives us the p-value, though which we can determine the significance of the test. A small p-value (typically less than 0.05) indicates strong evidence against the null hypothesis, which in this case is that there is no difference in the medians of the outcome variable between the different levels of the categorical variable.
 
-As only the p-value of the categorical variable "smoker" is below the significance level of 5%, we can only reject the null hypothesis for smoker and therefore say, there is a significant difference in the medians of the outcome variable between beeing a smoker and not. We can confirm the result also by looking at the boxplot, splitted up by category. This is also visible in small boxplots in the correlation matrix. 
+As only the p-value of the categorical variable "smoker" is below the significance level of 5%, we can only reject the null hypothesis for smoker and therefore say, there is a significant difference in the medians of the outcome variable between beeing a smoker and not. We can confirm the result also by looking at the boxplot, split up by category. This is also visible in small boxplots in the correlation matrix. 
 
 ```{r, warning=FALSE, message=FALSE }
 kruskal.test(df.insurance$charge , df.insurance$sex)
@@ -307,7 +303,7 @@ $\Sigma_{j=1}^J$ $\Sigma_{i \in R_j}$ $(y_i - \hat{y}_{R_j})^2$
 
 where $\hat{y}_{R_j}$ is the mean value for the predictor variable in that given region based on the training data.
 
-The splitting is done in a top-down, greedy manner, where the splitting starts at the top of the tree (i.e. all data-points belong to the same region), then this split in 2, and this process is repeated for each split in the tree.
+The splitting is done in a top-down, greedy manner, where the splitting starts at the top of the tree (i.e. all data-points belong to the same region), then this is split in 2, and this process is repeated for each split in the tree.
 It is greedy in the sense that it does not look ahead steps into the future; it simply predicts the best split for the split in question.
 
 The actual splitting is done as follows.
@@ -340,8 +336,6 @@ The rule of thumb that is used by the rpart package is to take the largest value
 
 #### Hyperparameter Optimization
 
--   a description of your fitting process including, a summary of how you arrived at your final model, the choice of hyperparameters and how you made this choice,
-
 This is how the rpart regression tree works out of the box: the standard hyperparameter settings form a baseline of the regression trees.
 Rpart uses 10-fold cross validation as its default to find the complexity parameter. The tree looks as follows. To explain how to interpret this output, the first split is made on whether or not one is a smoker; if one is not a smoker, the next split is based on age; otherwise, the next split is made on BMI.
 
@@ -356,7 +350,7 @@ We can see in the below plot how the error decreases as the complexity parameter
 
 Based on this plot a suitable complexity parameter is selected, and this quite interpretable decision tree is shown. 
 
-Note, there exist other error measures for the splitting criteria and this will be discussed further on. Note that the cp=0.019 was gotten from reading the cpmatrix and applying the rule of picking a cp within 1sd of the smallest error; cpmatrix has been commented out to avoid it being printed in the report. The splitting rule, now shown in an easy-to-read plot, is similar to the one outputted by rpart's default settings.
+Note, there exist other error measures for the splitting criteria and this will be mentioned in the section on future work. Note that the cp=0.019 was gotten from reading the cpmatrix and applying the rule of picking a cp within 1sd of the smallest error; cpmatrix has been commented out to avoid it being printed in the report. The splitting rule, now shown in an easy-to-read plot, is similar to the one outputted by rpart's default settings.
 
 ```{r, echo=FALSE}
 
@@ -400,8 +394,6 @@ pred.train.pruned <- predict(prune.data, valid, se.fit = TRUE)
 RMSE(pred.train.pruned, valid$charges) 
 R2(pred.train.pruned, valid$charges) 
 ```
-
-<font style='color: #000000; background-color: #FF0000'>**Do the Gridsearch for the splitting criteria as well, gini index vs. entropy**</font>
 
 Note that the default method and the one found via our rule of thumb find the same value and thus the same RMSE and R2 values.
 
@@ -862,5 +854,6 @@ On both of our chosen metrics, it is clear that the regression tree outperforms 
 
 *Talk about doing the Gridsearch for the splitting criteria as well, gini index vs. entropy
 *Criticism of tree that it only predicts 4 values for what is a continuous variable
+*Upside of linear model is that it is possibly the most easy to interpret of all three, even if it does not perform as well
 
 
