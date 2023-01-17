@@ -155,7 +155,7 @@ Looking at the boxplot for the charge we can confirm that. We can inspect a long
 summary(df.insurance)
 ```
 
-```{r, echo=FALSE,fig.width=10,fig.height=8}
+```{r, echo=FALSE, fig.width=10, fig.height=8}
 
 plot_histograms <- function(df) {
   plots <- list()
@@ -270,19 +270,22 @@ summary(lm1)
 
 Finally, we predict the outcome on the validation set and calculate RMSE and R2 scores.
 
+| Model                   | RMSE_{valid} | R2_{valid} |
+|-------------------------|--------------|------------|
+| Linear Model (Baseline) | 5914.225     | 0.7953     |
+
 The R2 score of 0.71 is good enough for interpreting the coefficients. From the model summary we can see hat the following explanatory variables are statistically significant:
 
 -   Age has an positive effect on the charges. One unit change on age results in an increase of the charges of **259.98$**
 -   BMI has an positive effect on the charges. One unit change on BMI results in an increase of the charges of **327.40$**
 -   Children has an positive effect on the charges. One unit change on Children results in an increase of the charges of **477.80$**
--   BMI has an positive effect on the charges. One unit change on BMI results in an increase of the charges of **327.40$**
 -   Smoker has an positive effect on the charges. Being a smoker results in an increase of the charges of **23594.95$**
 
 
 ```{r}
-pred.lm.test <- predict(lm1, test, se.fit = TRUE)
-RMSE(pred.lm.test$fit, test$charges)
-R2(pred.lm.test$fit, test$charges)
+pred.lm.valid <- predict(lm1, valid, se.fit = TRUE)
+RMSE(pred.lm.valid$fit, valid$charges)
+R2(pred.lm.valid$fit, valid$charges)
 ```
 
 ### Algorithm 1 - Tree Models
@@ -432,9 +435,13 @@ R2(predictions, valid$charges)
 
 -   an appropriate assessment of the predicted values and <font style='color: #000000; background-color: #FF0000'>**Include variable importance. For a singel tree you can interpret a fitted model by inspecting the text output of the tree or the tree diagram itself. We could also calculate the Increase in Node Purity and Mean decrease in Accuracy, but that is most often done for ensembled methods, as you e.g can not plot all trees of a random forest.**</font>
 
-The best result was for the final tree found via hyperparameter optimisation which gave an RMSE of \[1\] 4759.202 and an R2 of \[1\] 0.8432418 on the validation data.
+Finally, we predict the outcome of the final tree, found via hyperparameter optimisation, on the validation set and calculate RMSE and R2 scores.
 
-It looks as follows
+| Model                   | RMSE_{valid} | R2_{valid} |
+|-------------------------|--------------|------------|
+| Regression Tree         | 4759.202     | 0.8432     |
+
+The final tree itself looks as follows:
 
 ```{r}
 printcp(rpart(charges~.,train,cp=0.01))
@@ -821,31 +828,32 @@ As the result of the HPO, the the following parameters were found to perform the
 
 As the result, MSE of 18894440 on the validation loss could be achieved, which is almost 50% better than MSE of 35508452 by the predefined model from above.
 
+
+Finally, we predict the outcome on the validation set and calculate RMSE and R2 scores.
+
+| Model          | RMSE_{valid} | R2_{valid} |
+|----------------|--------------|------------|
+| Neural Network | 5914.225     | 0.7953     |
+
 ## Model Comparison
 
 In this chapter, we want to present a fair comparison of the models. Therefore, we use the test set, which none of the model have seen yet and predict outcome variable using each model's best parameters, which we determined using HPO.
 
 We compare RMSE and R2 scores for the baseline model, for the regression tree model and for the neural network model.
 
--   Baseline model:
-
-```{r}
+```{r, echo=FALSE, eval=FALSE}
 pred.lm.test <- predict(lm1, test, se.fit = TRUE)
 RMSE(pred.lm.test$fit, test$charges)
 R2(pred.lm.test$fit, test$charges)
 ```
 
--   Regression Tree model:
-
-```{r}
+```{r, echo=FALSE, eval=FALSE}
 pred.regtree.test <- predict(regtree, newdata = test)
 RMSE(pred.regtree.test, test$charges)
 R2(pred.regtree.test, test$charges)
 ```
 
--   Neural Network model:
-
-```{r}
+```{r, echo=FALSE, eval=FALSE}
 pred.nn.test <- read.csv(file ='./results/predictions_nn.csv', sep = ' ', header = FALSE)
 pred.nn.test <- t(pred.nn.test)
 pred.nn.test <- head(pred.nn.test, - 1)
@@ -853,6 +861,12 @@ pred.nn.test <- head(pred.nn.test, - 1)
 RMSE(pred.nn.test, test$charges) 
 R2(pred.nn.test, test$charges) 
 ```
+
+| Model                   | RMSE_{test} | R2_{test} |
+|-------------------------|-------------|-----------|
+| Linear Model (Baseline) | 6328.782    | 0.7118    |
+| Regression Tree         | 5152.172    | 0.8079    |
+| Neural Network          | 4881.731    | 0.8274    |
 
 Both of the models could outperform the baseline model, but neural network seems to preform the best.
 
