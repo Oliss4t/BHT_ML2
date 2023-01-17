@@ -853,6 +853,42 @@ Finally, we predict the outcome on the validation set and compare MSE values.
 
 We can see that the optimized model could achieve almost 50% improvement in terms of MSE value, which indicates that the performance of the model has been improved a lot.
 
+# Model Comparison
+
+In this chapter, we want to present a fair comparison of the models.
+Therefore, we use the test set, which none of the model have seen yet and predict outcome variable using each model's best parameters, which we determined using HPO.
+
+We compare RMSE and R2 scores for the baseline model, for the regression tree model and for the neural network model.
+
+```{r, echo=FALSE, eval=FALSE}
+pred.lm.test <- predict(lm1, test, se.fit = TRUE)
+RMSE(pred.lm.test$fit, test$charges)
+R2(pred.lm.test$fit, test$charges)
+```
+
+```{r, echo=FALSE, eval=FALSE}
+pred.regtree.test <- predict(regtree, newdata = test)
+RMSE(pred.regtree.test, test$charges)
+R2(pred.regtree.test, test$charges)
+```
+
+```{r, echo=FALSE, eval=FALSE}
+pred.nn.test <- read.csv(file ='./nn_model/results/predictions_nn.csv', sep = ' ', header = FALSE)
+pred.nn.test <- t(pred.nn.test)
+pred.nn.test <- head(pred.nn.test, - 1)
+RMSE(pred.nn.test, test$charges) 
+R2(pred.nn.test, test$charges) 
+```
+
+| Model                   | $RMSE_{test}$ | $R2_{test}$ |
+|-------------------------|---------------|-------------|
+| Linear Model (Baseline) | 6328.782      | 0.7118      |
+| Regression Tree         | 5152.172      | 0.8079      |
+| Neural Network          | 4881.731      | 0.8274      |
+
+We can conclude that both models outperform the baseline model, but neural network seems to perform the best.
+
+\pagebreak
 
 # Future Work and Discussion
 
