@@ -1,0 +1,4 @@
+batch_size: 314
+layers: 5
+learning_rate: 0.07480786257836854
+num_neurons: 235
