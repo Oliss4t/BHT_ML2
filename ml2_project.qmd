@@ -101,11 +101,6 @@ df.insurance <- df.insurance %>%
 
 set.seed(1)
 inds <- partition(df.insurance$charges, p = c(train = 0.6, valid = 0.2, test = 0.2))
-str(inds)
-
-#$ train: int [1:804] 2 3 7 8 9 11 12 15 16 18 ...
-#$ valid: int [1:266] 5 17 19 31 36 41 46 47 49 51 ...
-#$ test : int [1:268] 1 4 6 10 13 14 20 22 24 26 ...
 
 train <- df.insurance[inds$train, ]
 valid <- df.insurance[inds$valid, ]
@@ -279,7 +274,7 @@ This is called regression analysis.
 
 #### Hyperparameter Optimization
 
-Since we use the linear model as a baseline, we don't conduct the hyperparameter optimization on the model.
+Since we use the linear model as a baseline, we don't conduct the hyperparameter optimization on that model.
 
 ```{r}
 lm1 <- lm(charges ~ ., train)
@@ -289,34 +284,29 @@ summary(lm1)
 #### Performance
 
 Finally, we predict the outcome on the validation set and calculate RMSE and R2 scores.
-The R2 score of 0.71 is good enough for interpreting the coefficients.
-From the model summary we can see hat the following explanatory variables are statistically significant:
-
-<<<<<<< HEAD
-| Model                   | RMSE_{valid} | R2_{valid} |
-|-------------------------|--------------|------------|
-| Linear Model (Baseline) | 5914.225     | 0.7953     |
-
-The R2 score of 0.71 is good enough for interpreting the coefficients. From the model summary we can see hat the following explanatory variables are statistically significant:
-
--   Age has an positive effect on the charges. One unit change on age results in an increase of the charges of **259.98$**
--   BMI has an positive effect on the charges. One unit change on BMI results in an increase of the charges of **327.40$**
--   Children has an positive effect on the charges. One unit change on Children results in an increase of the charges of **477.80$**
--   Smoker has an positive effect on the charges. Being a smoker results in an increase of the charges of **23594.95$**
-
-=======
--   Age has an positive effect on the charges. One unit change on age results in an increase of the charges of **259.98\$**
--   BMI has an positive effect on the charges. One unit change on BMI results in an increase of the charges of **327.40\$**
--   Children has an positive effect on the charges. One unit change on Children results in an increase of the charges of **477.80\$**
--   BMI has an positive effect on the charges. One unit change on BMI results in an increase of the charges of **327.40\$**
--   Smoker has an positive effect on the charges. Being a smoker results in an increase of the charges of **23594.95\$**
->>>>>>> 08522cd89764122adcfc76862663aaa345434d45
 
 ```{r}
 pred.lm.valid <- predict(lm1, valid, se.fit = TRUE)
 RMSE(pred.lm.valid$fit, valid$charges)
 R2(pred.lm.valid$fit, valid$charges)
 ```
+
+| Model                   | $RMSE_{valid}$ | $R2_{valid}$ |
+|-------------------------|----------------|--------------|
+| Linear Model (Baseline) | 5914.225       | 0.7953       |
+
+The R2 score of 0.79 is good enough for interpreting the coefficients. From the model summary we can see hat the following explanatory variables are statistically significant:
+
+-   Age has an positive effect on the charges. One unit change on age results in an increase of the charges of **259.98$**
+-   BMI has an positive effect on the charges. One unit change on BMI results in an increase of the charges of **327.40$**
+-   Children has an positive effect on the charges. One unit change on Children results in an increase of the charges of **477.80$**
+-   Smoker has an positive effect on the charges. Being a smoker results in an increase of the charges of **23594.95$**
+-   Age has an positive effect on the charges. One unit change on age results in an increase of the charges of **259.98\$**
+-   BMI has an positive effect on the charges. One unit change on BMI results in an increase of the charges of **327.40\$**
+-   Children has an positive effect on the charges. One unit change on Children results in an increase of the charges of **477.80\$**
+-   BMI has an positive effect on the charges. One unit change on BMI results in an increase of the charges of **327.40\$**
+-   Smoker has an positive effect on the charges. Being a smoker results in an increase of the charges of **23594.95\$**
+
 
 ### Algorithm 1 - Regression Tree
 
@@ -458,19 +448,13 @@ For a single tree you can interpret a fitted model by inspecting the text output
 We could also calculate the Increase in Node Purity and Mean decrease in Accuracy, but that is most often done for ensemble methods, as you e.g can not plot all trees of a random forest.
 Given that Smoking, BMI and Age are the only variables considered by our 'best' model, we can consider that these variables are the most important.
 
-<<<<<<< HEAD
 Finally, we predict the outcome of the final tree, found via hyperparameter optimisation, on the validation set and calculate RMSE and R2 scores.
 
-| Model                   | RMSE_{valid} | R2_{valid} |
-|-------------------------|--------------|------------|
-| Regression Tree         | 4759.202     | 0.8432     |
+| Model                   | $RMSE_{valid}$ | $R2_{valid}$ |
+|-------------------------|----------------|--------------|
+| Regression Tree         | 5076.103       | 0.8479       |
 
 The final tree itself looks as follows:
-=======
-The best result was for the final tree found via hyperparameter optimisation which gave an RMSE of \[1\] 5076.103 and an R2 of \[1\] 0.8478985 on the validation data.
-
-The tree once again looks as follows:
->>>>>>> 08522cd89764122adcfc76862663aaa345434d45
 
 ```{r}
 printcp(rpart(charges~.,train))
@@ -780,29 +764,20 @@ trainer.fit(model)
 
 Before the training, we can check how many weights will be used in the model:
 
-\| Name \| Type \| Params
+|   | Name   | Type       | Params |
+|---|--------|------------|--------|
+| 0 | input  | Linear     | 448    |
+| 1 | hidden | Sequential | 12.5 K |
+| 2 | output | Linear     | 65     |
+| 3 | relu   | ReLU       | 0      |
 
-'--------------------------------------
+Total: 13.0 K Trainable params
 
-0 \| input \| Linear \| 448
+After the training of the initial model, we received the following MSE scores:
 
-1 \| hidden \| Sequential \| 12.5 K
-
-2 \| output \| Linear \| 65
-
-3 \| relu \| ReLU \| 0
-
-'--------------------------------------
-
-13.0 K Trainable params
-
-0 Non-trainable params
-
-13.0 K Total params
-
-0.052 Total estimated model params size (MB)
-
-As the result, we obtain the MSE of 34806204 on the train set and MSE of 35508452 on the validation set.
+| Model                      | $MSE_{train}$ | $MSE_{valid}$ |
+|----------------------------|---------------|---------------|
+| Neural Network (initial)   | 34806204      | 35508452      |
 
 #### Hyperparameter Optimization
 
@@ -843,14 +818,14 @@ As the result of the HPO, the the following parameters were found to perform the
 
 #### Performance
 
-As the result, MSE of 18894440 on the validation loss could be achieved, which is almost 50% better than MSE of 35508452 by the predefined model from above.
+Finally, we predict the outcome on the validation set and compare MSE values.
 
+| Model                      | $MSE_{valid}$ |
+|----------------------------|---------------|
+| Neural Network (initial)   | 35508452      |
+| Neural Network (optimized) | 18894440      |
 
-Finally, we predict the outcome on the validation set and calculate RMSE and R2 scores.
-
-| Model          | RMSE_{valid} | R2_{valid} |
-|----------------|--------------|------------|
-| Neural Network | 5914.225     | 0.7953     |
+We can see that the optimized model could achieve almost 50% improvement in terms of MSE value, which indicates that the performance of the model has been improved a lot.
 
 ## Model Comparison
 
@@ -872,7 +847,7 @@ R2(pred.regtree.test, test$charges)
 ```
 
 ```{r, echo=FALSE, eval=FALSE}
-pred.nn.test <- read.csv(file ='./results/predictions_nn.csv', sep = ' ', header = FALSE)
+pred.nn.test <- read.csv(file ='./nn_model/results/predictions_nn.csv', sep = ' ', header = FALSE)
 pred.nn.test <- t(pred.nn.test)
 pred.nn.test <- head(pred.nn.test, - 1)
 
@@ -880,13 +855,13 @@ RMSE(pred.nn.test, test$charges)
 R2(pred.nn.test, test$charges) 
 ```
 
-| Model                   | RMSE_{test} | R2_{test} |
-|-------------------------|-------------|-----------|
-| Linear Model (Baseline) | 6328.782    | 0.7118    |
-| Regression Tree         | 5152.172    | 0.8079    |
-| Neural Network          | 4881.731    | 0.8274    |
+| Model                   | $RMSE_{test}$ | $R2_{test}$ |
+|-------------------------|---------------|-------------|
+| Linear Model (Baseline) | 6328.782      | 0.7118      |
+| Regression Tree         | 5152.172      | 0.8079      |
+| Neural Network          | 4881.731      | 0.8274      |
 
-Both of the models could outperform the baseline model, but neural network seems to preform the best.
+We can conclude that both models outperform the baseline model, but neural network seems to perform the best.
 
 ## Future Work and Discussion
 
@@ -897,9 +872,3 @@ The linear model has the advantage of being the easiest to interpret of all thre
 For future work, we could attempt to improve the interpretability of the neural network by using model-agnostic tools such as SHAP values. Additionally, we could improve the current regression tree by including other parameters into the hyperparameter optimization, testing different splitting criteria such as gini index vs. entropy. If that doesn't improve performance, we could also build multiple trees and use the ensemble method Random Forest. However, this would reduce interpretability again. 
 
 In conclusion, the choice of model depends on the desired balance between performance and interpretability. While the neural network is the model that showed the best performance, the regression tree may be a more suitable choice for this task because of its greater explainability. 
-
-
-
-
-
-
