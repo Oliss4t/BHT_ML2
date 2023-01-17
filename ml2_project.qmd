@@ -42,8 +42,7 @@ For both the Neural Network and the Regression Tree models, we wish to find a 'b
 For this purpose, these models are initially trained only on the train split (as outlined further on), and the 'best' model for each is decided upon based on their performance on a validation split.
 As such, the selection of the best model in our two algorithm classes is based on the validation error.
 
-It is important to emphasise that this leaves the test data untouched at the stage when these models are created, leaving the test data purely for the final model comparison between the best Neural Net and the best Regression Tree.
-Then when ultimately comparing the two chosen models, these are retrained on the combined train and validation splits, and finally tested on the test set, which has been withheld for this purpose.
+It is important to emphasise that this leaves the test data untouched at the stage when these models are created, leaving the test data purely for the final model comparison between the best Neural Net and the best Regression Tree. These will also be compared to our baseline linear model's performance on the test set.
 
 This report will conclude with a discussion of our findings, an examination of what worked and what did not work, and will also mention avenues for future work.
 
