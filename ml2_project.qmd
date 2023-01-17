@@ -61,6 +61,7 @@ library(caret)
 library(rpart)
 library(rpart.plot)
 library(ggplot2)
+library(cowplot)
 library(dplyr)
 library(gridExtra)
 library(GGally)
@@ -475,9 +476,10 @@ The first layer, called the input layer, receives the input variables, and the l
 In between the input and output layers, there are one or more hidden layers that perform computations on the input data.
 
 The mathematical notation for a neural network can be quite complex as it depends on the architecture of the network, the number of layers and the activation functions used.
+
 In general, a neural network can be represented mathematically as:
 
-$y = f(W_n * f(W_{n-1} * f(...f(W_1 * x + b_1) + b_2)... + b_n) + b_{n+1})$
+$$y = f(W_n * f(W_{n-1} * f(... f(W_1 * x + b_1) + b_2)... + b_{n-1}) + b_n)$$
 
 Where:
 
@@ -487,11 +489,9 @@ Where:
 -   W = weight matrix
 -   b = bias term
 
-This equation is showing a simplified version of a feedforward neural network with one hidden layer, the input, hidden and output layers.
+#### Initial Model
 
-#### Implementation
-
-##### Python libraries
+**Python libraries**
 
 To train the neural network model, we use Python and the following libraries:
 
@@ -501,7 +501,7 @@ To train the neural network model, we use Python and the following libraries:
 -   **pytorch_lightning** for running and logging the training
 -   **optuna** for hyperparameter optimization
 
-```{python eval=FALSE}
+```{python eval=FALSE, echo=FALSE}
 import pandas as pd
 import numpy as np
 
@@ -522,11 +522,11 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 import optuna
 ```
 
-##### Data preprocessing
+**Data preprocessing**
 
-To preprocess the data, we transformed the categorical variables using **LabelEncoder** and scaled the numerical data using **MinMaxScaler** from **sklearn** library:
+For data preprocessing we transformed the categorical variables using **LabelEncoder** and scaled the numerical data using **MinMaxScaler** from **sklearn** library:
 
-```{python eval=FALSE}
+```{python eval=FALSE, echo=FALSE}
 def labelEncoder(df):
     for col in df.columns:
         if df.dtypes[col] == "object":
@@ -541,16 +541,11 @@ val[cols_to_scale] = scaler.transform(val[cols_to_scale])
 test[cols_to_scale] = scaler.transform(test[cols_to_scale])
 ```
 
-##### Dataset Architecture
+**Dataset Architecture**
 
 To run the training process, we have to define custom data classes first, **trainDataset**, **valDataset**, and **testDataset** that are used to load and preprocess the data for training, validation and testing respectively.
 
-Each dataset class takes one parameter, which is a DataFrame **df** containing the data, and creates two attributes, **X** and **y** from the dataframe.
-**X** is a tensor containing the input features 'age', 'sex', 'bmi', 'children', 'smoker', 'region' and **y** is a tensor containing the target variable 'charges'.
-
-The **len** method returns the number of data points in the dataset, and the **getitem** method is used to retrieve a specific data point at a given index.
-
-```{python eval=FALSE}
+```{python eval=FALSE, echo=FALSE}
 class trainDataset(torch.utils.data.Dataset):
     def __init__(self, df):
         self.X = torch.tensor(df[['age', 'sex', 'bmi', 'children', 'smoker', 'region']].values, dtype=torch.float32)
@@ -585,35 +580,16 @@ class testDataset(torch.utils.data.Dataset):
         return self.X[idx], self.y[idx]
 ```
 
-##### Model Architecture
+**Model Architecture**
 
-The following section describes the model architecture of the neural network model.
-
-The **RegressionModel** class is a subclass of PyTorch's LightningModule, which is a high-level wrapper for PyTorch's neural network module.
-
-The class takes four parameters:
+The **RegressionModel** class takes four parameters:
 
 -   layers: an integer representing the number of hidden layers in the network
 -   num_neurons: an integer representing the number of neurons in each hidden layer
 -   learning_rate: a float representing the learning rate for the optimizer
 -   batch_size: an integer representing the batch size to use during training
 
-The **init** method is called when the class is first instantiated and sets up the neural network architecture.
-It creates a series of hidden layers using the helper function hidden_layer.
-The input layer of the network is defined with 6 input features, and the output layer has 1 output feature.
-
-Each hidden layer is defined as a linear layer followed by a ReLU activation function.
-
-The **forward** method defines the computation that takes place within the neural network, where input data is passed through the layers and transformed into output predictions.
-
-The **training_step**, **validation_step**, and **test_step** methods define what happens during each step of the training, validation, and test processes respectively.
-They calculate the mean squared error loss between the predictions and the true values, log the loss and return it for optimization.
-
-The **configure_optimizers** method sets the optimizer to use for training, in this case, the **Adam** optimizer with the specified learning rate.
-
-The **train_dataloader**, **val_dataloader** and **test_dataloader** methods return the data loaders for training, validation, and test dataset respectively.
-
-```{python eval=FALSE}
+```{python eval=FALSE, echo=FALSE}
 def hidden_layer(in_f, out_f):
     return torch.nn.Sequential(
         torch.nn.Linear(in_f, out_f),
@@ -680,22 +656,25 @@ class RegressionModel(pl.LightningModule):
 ```
 
 The mathematical notation for the neural network model defined above can be represented as a series of layers, with each layer performing a set of mathematical operations on the input it receives.
+
 The output of one layer serves as the input to the next layer.
+
 The mathematical notation for each hidden layer would be:
 
-$h_i = f(W_i * h_{i-1} + b_i)$
+$$h_i = f(W_i * h_{i-1} + b_i)$$
 
 Where:
 
 -   $h_i$ is the output of the i-th hidden layer
--   $h_{i-1}$ is the output of the (i-1)-th hidden layer
 -   $W_i$ is the weight matrix for the i-th hidden layer
 -   $b_i$ is the bias term for the i-th hidden layer
--   $f$ is the activation function (ReLU)
+-   $f$ is the activation function
+
+f(x) is the output of the function
 
 The mathematical notation for the input layer is:
 
-$h_0 = W_0 * x + b_0$
+$$h_0 = W_0 * x + b_0$$
 
 Where:
 
@@ -715,11 +694,27 @@ Where:
 -   $W_{n+1}$ is the weight matrix for the output layer
 -   $b_{n+1}$ is the bias term for the output layer
 
-The optimizer used in the model above is the Adam optimizer.
-Adam is an optimization algorithm that combines the benefits of the Adaptive Gradient Algorithm (AdaGrad) and Root Mean Square Propagation (RMSProp).
-The mathematical notation for the Adam optimizer is:
+In our model, we use ReLU (Rectified Linear Unit) as activation function, which is defined mathematically as:
 
-$\theta_{t+1} = \theta_t - \frac{\alpha}{\sqrt{\hat{v}_t} + \epsilon}\hat{m}_t$
+$$ f(x) = \max(0, x) $$
+
+where:
+
+-   $x$ is the input to the function
+
+To train the model properly, an optimizer function should be defined, which adjust the model's parameters so as to minimize the cost function. We use MSE loss, which measures the difference between the model's predictions and the true labels, which mathematical notation is denoted as:
+
+$$ MSE = \frac{1}{m} \sum_{i=1}^{m} (y^{(i)} - \hat{y}^{(i)})^2 $$
+
+where:
+
+-   $m$ is the number of examples in the training set
+-   $y^{(i)}$ is the true label of the i-th example
+-   $\hat{y}^{(i)}$ is the predicted label of the i-th example by the model
+
+In our model, we use the Adam optimizer, which has the following mathematical notation:
+
+$$\theta_{t+1} = \theta_t - \frac{\alpha}{\sqrt{\hat{v}_t} + \epsilon}\hat{m}_t$$
 
 Where:
 
@@ -729,33 +724,19 @@ Where:
 -   $\hat{v}_t$ is the biased second raw moment estimate
 -   $\epsilon$ is a small positive constant that is added to the denominator to prevent division by zero
 
-It's worth noting that the Adam optimizer also uses the concepts of momentum and adaptive learning rate which are not reflected in the mathematical notation above.
-
-##### Training the neural network
+**Training the neural network**
 
 Next, we want to test the model with predefined parameter set.
-Therefore, we are using the **RegressionModel** class defined earlier to create an instance of the model, and then training the model using the **Trainer** class from the **PyTorch Lightning** library.
+Therefore, we are using the **RegressionModel** class defined earlier to create an instance of the model
 
-The **TensorBoardLogger** is used to log the training progress and the results, it is passed to the **Trainer** class and it will save the logs into predefined folder.
-
-The **RegressionModel** instance is created with the following parameters:
+First, to check the performance of the neural network model, we train it for 50 epochs with the following parameters:
 
 -   num_neurons: 64
 -   layers: 3
 -   learning_rate: 0.001
 -   batch_size: 32
 
-The **Trainer** class is initialized with the following parameters:
-
--   max_epochs: 50
--   logger: the **TensorBoardLogger** created earlier
--   fast_dev_run: False, that means the model will run through the full training process
--   auto_lr_find: True, this will use the learning rate finder to find a good initial learning rate before training.
-
-The fit method is called on the trainer object with the model as its argument, this will start the training process.
-The trainer will take care of the training loop, logging progress, and saving the model.
-
-```{python eval=FALSE}
+```{python eval=FALSE, echo=FALSE}
 logger = TensorBoardLogger('lightning_logs', name='insurance')
 model = RegressionModel(num_neurons=64, layers=3, learning_rate=0.001, batch_size=32)
 trainer = pl.Trainer(max_epochs=50, logger=logger, fast_dev_run=False, auto_lr_find=True)
@@ -773,6 +754,15 @@ Before the training, we can check how many weights will be used in the model:
 
 Total: 13.0 K Trainable params
 
+Below you can see the train and validation losses during the training.
+
+```{r, fig.show = "hold", echo=FALSE}
+p1 <- ggdraw() + draw_image("./nn_model/results/training.png", scale = 0.9)
+p2 <- ggdraw() + draw_image("./nn_model/results/validation.png", scale = 0.9)
+
+plot_grid(p1, p2)
+```
+
 After the training of the initial model, we received the following MSE scores:
 
 | Model                      | $MSE_{train}$ | $MSE_{valid}$ |
@@ -783,6 +773,31 @@ After the training of the initial model, we received the following MSE scores:
 
 The HPO process on the neural network model was performed using **Optuna** library in Python.
 
+“Optuna is an automatic hyperparameter optimization software framework, particularly designed for machine learning. It features an imperative, define-by-run style user API…  the user of Optuna can dynamically construct the search spaces for the hyperparameters.”^[https://optuna.readthedocs.io/en]
+
+In this project, we are using Torch Lightning and Optuna to optimize a neural network. Torch Lightning handles the “model” which is the neural network, while Optuna handles tuning the hyperparameters. Optuna can be used to search for the optimal hyperparameters of a network and the results are used to fine-tune the network’s performance.
+
+Optuna uses various different sampling algorithms to narrow the search space. Some of the algorithms are for example Grid search, random search, tree-structured Parzen Estimator, CMA-ES based algorithm, and quasi-Monte Carlo sampling algorithm.
+The default sampler is the Tree-structured Parzen Estimator, which is also being used in this project.
+
+Tree-structured Parzen estimator is a type of bayesian estimator, where we fit a surrogate model to prior observations to estimate the hyperparameter space. The Key idea is instead of P(y|x), we model P(x|y), where x is a single hyperparameter and y is the loss. In TPE we maintain two surrogate models, one for the best cases (minimizing loss) and one for the worst cases (maximizing the loss). With each new observation, the model is fitted to the best and worst-case scenarios, giving us the most probable hyperparameters that result in the best and worst-case scenarios.^[https://www.jair.org/index.php/jair/article/view/13188]
+
+Optuna gives the user control of the surrogate model (or surrogate) by setting a hierarchy of parameters and the tree structure. This allows the user to control the model's fidelity, which is important when searching for optimal hyperparameters.
+Besides Sampling algorithms, Optuna also provides pruning algorithms for the early stopping of inefficient search trials. Pruning algorithms are useful when the search space is large, as they help to focus on only the efficient search trials while discarding the inefficient ones early on.
+
+Since the dataset chosen for this project is rather on a smaller scale of things, we defined a rather small search space so no pruning was needed.
+
+The steps in this project are as follows:
+-	Train the model with default hyperparameters
+-	Set up hyperparameter space
+-	Initiate the Optuna
+
+Once Optuna has finished the trial runs and made a suggestion of the optimal hyperparameters, a final model with the best parameters is trained, validated, and finally tested.
+
+Optuna and Torch Lightning can be combined to produce an efficient neural network model which can provide accurate and reliable results for machine learning tasks. 
+
+It is best used when the complexity of the problem and the size of the dataset are large.
+
 We let Optuna optimize 4 parameters for us:
 
 -   'num_neurons': number of neurons in each layer, between 16 and 256
@@ -790,7 +805,7 @@ We let Optuna optimize 4 parameters for us:
 -   'layers': amount of layers, between 1 and 5
 -   'learning_rate': learning rate of the Adam optimizer, between 1e-5 and 1e-1
 
-```{python eval=FALSE}
+```{python eval=FALSE, echo=FALSE}
 def optimize_model(trial):
     
     num_neurons = trial.suggest_int('num_neurons', 16, 256)
