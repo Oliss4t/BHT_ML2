@@ -65,6 +65,7 @@ library(gridExtra)
 library(GGally)
 library(PMCMRplus)
 library("corrplot")
+library(magick)
 ```
 
 ```{r include=FALSE}
@@ -852,7 +853,6 @@ Finally, we predict the outcome on the validation set and compare MSE values.
 
 We can see that the optimized model could achieve almost 50% improvement in terms of MSE value, which indicates that the performance of the model has been improved a lot.
 
-\pagebreak
 
 # Future Work and Discussion
 
